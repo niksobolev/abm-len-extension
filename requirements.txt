@@ -1,0 +1,8 @@
+-i https://pypi.python.org/simple
+
+mesa
+axelrod
+statsmodels
+salib
+pandas
+numpy
