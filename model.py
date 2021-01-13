@@ -43,20 +43,24 @@ class Company(Agent):
 
 
 class LenExtended(Model):
-    def __init__(self, n):
-        self.num_agents = n
-        self.schedule = RandomActivation(self)
+    def __init__(self, num_hh, num_cmp):
+        self.num_hh = num_hh
+        self.num_cmp = num_cmp
+        self.hh_schedule = RandomActivation(self)
+        self.cmp_schedule = RandomActivation(self)
 
-        for i in range(self.num_agents):
-            h = Householder(i, self)
+        for i in range(self.num_cmp):
             c = Company(i, self)
-            self.schedule.add(h)
-            self.schedule.add(c)
+            self.cmp_schedule.add(c)
+
+        for i in range(self.num_hh):
+            h = Householder(i, self)
+            self.hh_schedule.add(h)
 
     def step(self):
-        self.schedule.step()
+        self.hh_schedule.step()
 
 
-empty_model = LenExtended(10)
+empty_model = LenExtended(10, 10)
 empty_model.step()
 empty_model.step()
