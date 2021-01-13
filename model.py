@@ -12,7 +12,16 @@ class Householder(Agent):
         for company in range(7):
             self.companies.append(self.random.choice(self.model.cmp_schedule.agents).unique_id)
 
-    def check_companies(self):
+    def search_cheaper_prices(self):
+        pass
+
+    def search_productive_firms(self):
+        pass
+
+    def search_new_job(self):
+        pass
+
+    def identify_consumption(self):
         pass
 
     def buy_goods(self):
@@ -21,10 +30,17 @@ class Householder(Agent):
     def apply(self):
         pass
 
+    def end_of_month(self):
+        self.search_cheaper_prices()
+        self.search_productive_firms()
+        self.search_new_job()
+        self.identify_consumption()
+        pass
+
     def step(self):
-        print("Hi, I am agent {0} with wealth equal to {1}.".format(self.unique_id, self.wealth))
-        print('I know about {0}'.format(self.companies))
-        self.wealth += random.randint(-100, 100)
+        if self.model.current_day // 30 == 0:
+            self.end_of_month()
+        self.buy_goods()
 
 
 class Company(Agent):
@@ -37,18 +53,44 @@ class Company(Agent):
     def produce(self):
         pass
 
-    def pay_salary(self):
+    def pay_wages(self):
+        pass
+
+    def fill_money_buffer(self):
+        pass
+
+    def give_shares(self):
+        pass
+
+    def set_wage_rate(self):
+        pass
+
+    def hire_or_fire(self):
+        pass
+
+    def change_goods_price(self):
+        pass
+
+    def end_of_month(self):
+        self.pay_wages()
+        self.fill_money_buffer()
+        self.give_shares()
+        self.set_wage_rate()
+        self.hire_or_fire()
+        self.change_goods_price()
         pass
 
     def step(self):
-        print("Hi, I am agent {0} with wealth equal to {1}.".format(self.unique_id, self.wealth))
-        self.wealth += random.randint(-100, 100)
+        self.produce()
+        if self.model.current_day // 30 == 0:
+            self.end_of_month()
 
 
 class LenExtended(Model):
     def __init__(self, num_hh, num_cmp):
         self.num_hh = num_hh
         self.num_cmp = num_cmp
+        self.current_day = 0
         self.hh_schedule = RandomActivation(self)
         self.cmp_schedule = RandomActivation(self)
 
@@ -61,7 +103,9 @@ class LenExtended(Model):
             self.hh_schedule.add(h)
 
     def step(self):
+        self.cmp_schedule.step()
         self.hh_schedule.step()
+        self.current_day += 1
 
 
 empty_model = LenExtended(10, 10)
