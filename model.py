@@ -8,7 +8,9 @@ class Householder(Agent):
         super().__init__(unique_id, model)
         self.wealth = random.randint(100, 1000)
         self.wage = 0
-        self.companies = {}
+        self.companies = []
+        for company in range(7):
+            self.companies.append(self.random.choice(self.model.cmp_schedule.agents).unique_id)
 
     def check_companies(self):
         pass
@@ -21,6 +23,7 @@ class Householder(Agent):
 
     def step(self):
         print("Hi, I am agent {0} with wealth equal to {1}.".format(self.unique_id, self.wealth))
+        print('I know about {0}'.format(self.companies))
         self.wealth += random.randint(-100, 100)
 
 
