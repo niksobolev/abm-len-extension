@@ -50,6 +50,10 @@ class Company(Agent):
         self.wage = random.randint(100, 1000)
         self.looking_for_worker = 0
         self.full_workplaces = 0
+        self.demand = 10
+        self.demand_min_coefficient = 0.25
+        self.demand_max_coefficient = 1
+        self.inventory = 0
         self.sigma = 0.019  # percent for increasing/decreasing wage
         self.gamma = 24  # after this number of month with fulled working places we can decrease wage
         self.households = {}
@@ -74,7 +78,10 @@ class Company(Agent):
             self.wage = self.wage * (1 - random.uniform(0, self.sigma))
 
     def hire_or_fire(self):
-        pass
+        if self.inventory < self.demand_min_coefficient * self.demand:
+            self.looking_for_worker = 1
+        if self.inventory > self.demand_max_coefficient * self.demand:
+            del self.households[0]
 
     def change_goods_price(self):
         pass
