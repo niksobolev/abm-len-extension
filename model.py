@@ -47,6 +47,11 @@ class Company(Agent):
     def __init__(self, unique_id, model):
         super().__init__(unique_id, model)
         self.wealth = random.randint(1000, 10000)
+        self.wage = random.randint(100, 1000)
+        self.looking_for_worker = 0
+        self.full_workplaces = 0
+        self.sigma = 0.019  # percent for increasing/decreasing wage
+        self.gamma = 24  # after this number of month with fulled working places we can decrease wage
         self.households = {}
         self.product_price = random.randint(10, 100)
 
@@ -63,7 +68,10 @@ class Company(Agent):
         pass
 
     def set_wage_rate(self):
-        pass
+        if self.looking_for_worker == 1:
+            self.wage = self.wage * (1 + random.uniform(0, self.sigma))
+        if self.full_workplaces > self.gamma:
+            self.wage = self.wage * (1 - random.uniform(0, self.sigma))
 
     def hire_or_fire(self):
         pass
