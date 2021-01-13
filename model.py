@@ -48,6 +48,7 @@ class Company(Agent):
         super().__init__(unique_id, model)
         self.wealth = random.randint(1000, 10000)
         self.wage = random.randint(100, 1000)
+        self.price = 10
         self.looking_for_worker = 0
         self.full_workplaces = 0
         self.demand = 10
@@ -56,6 +57,11 @@ class Company(Agent):
         self.inventory = 0
         self.sigma = 0.019  # percent for increasing/decreasing wage
         self.gamma = 24  # after this number of month with fulled working places we can decrease wage
+        self.phi_min = 1.025  # required for counting marginal costs
+        self.phi_max = 1.15  # required for counting marginal costs
+        self.tau = 0.75  # chance to increase a price
+        self.upsilon = 0.02  # max range of distribution for increasing price
+        self.lambda_coefficient = 3  # how many products produced by one household per day
         self.households = {}
         self.product_price = random.randint(10, 100)
 
@@ -84,7 +90,13 @@ class Company(Agent):
             del self.households[0]
 
     def change_goods_price(self):
-        pass
+        marginal_costs = self.wage/(30 * self.lambda_coefficient)
+        if self.price < self.phi_min * marginal_costs:
+            if random.random() < self.tau:
+                self.price = self.price * (1 + random.uniform(0, self.upsilon))
+        if self.price > self.phi_max * marginal_costs:
+            if random.random() < self.tau:
+                self.price = self.price * (1 - random.uniform(0, self.upsilon))
 
     def end_of_month(self):
         self.pay_wages()
