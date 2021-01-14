@@ -6,7 +6,7 @@ import random
 class Householder(Agent):
     def __init__(self, unique_id, model):
         super().__init__(unique_id, model)
-        self.wealth = random.randint(1000, 10000)
+        self.wealth = random.randint(2000, 4500)
         self.wage = 0
         self.consumption = 0
         self.companies = []
@@ -73,6 +73,7 @@ class Householder(Agent):
     def buy_goods(self):
         for company in sorted(self.companies, key=lambda x: x.price):
             total_price = int(self.consumption * company.price)
+            company.demand += self.consumption
             if (company.inventory > self.consumption) and (total_price < self.wealth):
                 self.wealth -= total_price
                 company.wealth += total_price
@@ -103,15 +104,15 @@ class Householder(Agent):
 class Company(Agent):
     def __init__(self, unique_id, model):
         super().__init__(unique_id, model)
-        self.wealth = random.randint(1000, 10000)
-        self.wage = random.randint(100, 1000)
-        self.price = 10 + random.randint(0,5)
+        self.wealth = random.randint(600000, 1000000)
+        self.wage = random.randint(29000, 35000)
+        self.price = 330 + random.randint(0,20)
         self.looking_for_worker = False
         self.full_workplaces = 0
-        self.demand = 10
+        self.demand = 100
         self.demand_min_coefficient = 0.25
         self.demand_max_coefficient = 1
-        self.inventory = 0
+        self.inventory = 10
         self.sigma = 0.019  # percent for increasing/decreasing wage
         self.gamma = 24  # after this number of month with fulled working places we can decrease wage
         self.phi_min = 1.025  # required for counting marginal costs
@@ -149,14 +150,16 @@ class Company(Agent):
     # If we don't have enough inventory in buffer then hire a worker
     # If we have a lot of inventory in buffer then fire one
     def hire_or_fire(self):
-        if self.inventory < self.demand_min_coefficient * self.demand:
+        if self.inventory <= self.demand_min_coefficient * self.demand:
             self.looking_for_worker = True
         else:
             self.looking_for_worker = False
         if self.inventory > self.demand_max_coefficient * self.demand:
-            fired_h = self.households[0]
-            fired_h.company = None
-            del self.households[0]
+            if self.households:
+                fired_h = self.households[0]
+                fired_h.company = None
+                del self.households[0]
+        self.demand = 0
 
     # Marginal cost is price that we spend on production of 1 unit of inventory.
     # We spend money for only wages. Thus, marginal cost is wage divided by number
