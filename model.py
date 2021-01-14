@@ -77,18 +77,27 @@ class Company(Agent):
     def give_shares(self):
         pass
 
+    # If we didn't find worker last month then increase wage
+    # If we didn't loose worker for last <full_workplaces> months then decrease wage
     def set_wage_rate(self):
         if self.looking_for_worker == 1:
             self.wage = self.wage * (1 + random.uniform(0, self.sigma))
         if self.full_workplaces > self.gamma:
             self.wage = self.wage * (1 - random.uniform(0, self.sigma))
 
+    # If we don't have enough inventory in buffer then hire a worker
+    # If we have a lot of inventory in buffer then fire one
     def hire_or_fire(self):
         if self.inventory < self.demand_min_coefficient * self.demand:
             self.looking_for_worker = 1
         if self.inventory > self.demand_max_coefficient * self.demand:
             del self.households[0]
 
+    # Marginal cost is price that we spend on production of 1 unit of inventory.
+    # We spend money for only wages. Thus, marginal cost is wage divided by number
+    # of products produced per day * days in month. If we have small yield (less
+    # than 2.5 percent) then we need to increase price. If we earn more than 15%
+    # of marginal cost we should decrease price.
     def change_goods_price(self):
         marginal_costs = self.wage/(30 * self.lambda_coefficient)
         if self.price < self.phi_min * marginal_costs:
