@@ -6,14 +6,16 @@ import random
 class Householder(Agent):
     def __init__(self, unique_id, model):
         super().__init__(unique_id, model)
-        self.wealth = random.randint(100, 1000)
+        self.wealth = random.randint(1000, 10000)
         self.wage = 0
+        self.consumption = 0
         self.companies = []
         self.company = None
         self.wage_decreasing_coefficient = 0.95
         self.critical_price_ratio = 0.99  # if price in new company less that this value, replace company by new one
+        self.consumption_power = 0.9  # allows not to spend all money for consumption
         for _ in range(7):
-            self.companies.append(random.choice(model.cmp_schedule.agents).unique_id)
+            self.companies.append(random.choice(model.cmp_schedule.agents))
 
     def search_cheaper_prices(self):
         if random.random() < 0.25:
@@ -41,7 +43,8 @@ class Householder(Agent):
             self.wage *= self.wage_decreasing_coefficient
 
     def identify_consumption(self):
-        pass
+        average_price = sum(company.price for company in self.companies)/len(self.companies)
+        self.consumption = int((self.wealth/(30 * average_price)) ** self.consumption_power)
 
     def buy_goods(self):
         pass
