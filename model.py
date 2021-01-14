@@ -69,7 +69,7 @@ class Householder(Agent):
 
     def buy_goods(self):
         for company in sorted(self.companies, key=lambda x: x.price):
-            total_price = self.consumption * company.price
+            total_price = int(self.consumption * company.price)
             if (company.inventory > self.consumption) and (total_price < self.wealth):
                 self.wealth -= total_price
                 company.wealth += total_price
