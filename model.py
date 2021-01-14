@@ -228,5 +228,6 @@ class LenExtended(Model):
 
 
 empty_model = LenExtended(20, 4)
-empty_model.step()
-empty_model.step()
+number_of_steps = 10
+for i in range(number_of_steps):
+    empty_model.step()
