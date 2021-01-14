@@ -14,6 +14,8 @@ class Householder(Agent):
         self.wage_decreasing_coefficient = 0.95
         self.critical_price_ratio = 0.99  # if price in new company less that this value, replace company by new one
         self.consumption_power = 0.9  # allows not to spend all money for consumption
+        self.unemployed_attempts = 5  # how many times unemployed household tries to find a job
+        self.search_job_chance = 0.1  # chance to search a job if wage is more than desired
         for _ in range(7):
             self.companies.append(random.choice(model.cmp_schedule.agents))
 
@@ -35,12 +37,31 @@ class Householder(Agent):
         pass
 
     def search_new_job(self):
-        max_wage_company = sorted(self.companies, key=lambda x: x.wage, reverse=True)[0]
-        if max_wage_company.wage > self.wage:
-            max_wage_company.householders.append(self)
-            self.company = max_wage_company
-        if self.company is None:
-            self.wage *= self.wage_decreasing_coefficient
+        for i in range(self.unemployed_attempts):
+            company = random.choice(self.model.cmp_schedule.agents)
+            if company.looking_for_worker:
+                if self.company is not None:
+                    if company.wage > self.company.wage:
+                        if self.company.wage >= self.wage:
+                            if random.random() < self.search_job_chance:
+                                self.company.households.remove(self)
+                                self.company = company
+                                self.company.households.append(self)
+                                self.wage = self.company.wage
+                        else:
+                            self.company.households.remove(self)
+                            self.company = company
+                            self.company.households.append(self)
+                            self.wage = self.company.wage
+                    break
+                else:
+                    if company.wage >= self.wage:
+                        self.company = company
+                        self.company.households.append(self)
+                        self.wage = self.company.wage
+                        break
+        else:
+            self.wage *= 0.9
 
     def identify_consumption(self):
         average_price = sum(company.price for company in self.companies)/len(self.companies)
