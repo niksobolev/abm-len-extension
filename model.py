@@ -47,7 +47,13 @@ class Householder(Agent):
         self.consumption = int((self.wealth/(30 * average_price)) ** self.consumption_power)
 
     def buy_goods(self):
-        pass
+        for company in sorted(self.companies, key=lambda x: x.price):
+            total_price = self.consumption * company.price
+            if (company.inventory > self.consumption) and (total_price < self.wealth):
+                self.wealth -= total_price
+                company.wealth += total_price
+                company.inventory -= self.consumption
+                break
 
     def end_of_month(self):
         self.search_cheaper_prices()
