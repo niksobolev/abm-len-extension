@@ -11,11 +11,23 @@ class Householder(Agent):
         self.companies = []
         self.company = None
         self.wage_decreasing_coefficient = 0.95
+        self.critical_price_ratio = 0.99  # if price in new company less that this value, replace company by new one
         for _ in range(7):
             self.companies.append(random.choice(model.cmp_schedule.agents).unique_id)
 
     def search_cheaper_prices(self):
-        pass
+        if random.random() < 0.25:
+            random_known_pick = random.choice(self.companies)
+            list_of_pretenders = []
+            for firm in self.model.cmp_schedule.agents:
+                if firm not in self.companies:
+                    for i in range(len(firm.households)):
+                        list_of_pretenders.append(firm)
+            if list_of_pretenders:
+                random_unknown_pick = random.choice(list_of_pretenders)
+                if random_unknown_pick.price/random_known_pick.price < self.critical_price_ratio:
+                    self.companies.remove(random_known_pick)
+                    self.companies.append(random_unknown_pick)
 
     def search_productive_firms(self):
         pass
