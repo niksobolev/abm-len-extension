@@ -126,6 +126,8 @@ class Company(Agent):
         self.inventory += len(self.households) * self.lambda_coefficient
 
     def pay_wages(self):
+        if len(self.households) * self.wage > self.wealth:
+            self.wage = int(self.wealth/len(self.households))
         for h in self.households:
             h.wealth += self.wage
             self.wealth -= self.wage
