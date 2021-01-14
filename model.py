@@ -111,7 +111,7 @@ class Company(Agent):
         self.product_price = random.randint(10, 100)
 
     def produce(self):
-        pass
+        self.inventory += len(self.households) * self.lambda_coefficient
 
     def pay_wages(self):
         for h in self.households:
