@@ -86,6 +86,15 @@ class Householder(Agent):
         if self.model.current_day // 30 == 0:
             self.end_of_month()
         self.buy_goods()
+        print('')
+        print('Household ', self.unique_id)
+        print('Current wealth:', self.wealth)
+        try:
+            print('Working for company:', self.company.unique_id)
+            print('Real wage is:', self.company.wage)
+        except:
+            print('Unemployed')
+        print('Desired wage is:', self.wage)
 
 
 class Company(Agent):
@@ -93,7 +102,7 @@ class Company(Agent):
         super().__init__(unique_id, model)
         self.wealth = random.randint(1000, 10000)
         self.wage = random.randint(100, 1000)
-        self.price = 10
+        self.price = 10 + random.randint(0,5)
         self.looking_for_worker = False
         self.full_workplaces = 0
         self.demand = 10
@@ -170,6 +179,14 @@ class Company(Agent):
         self.produce()
         if self.model.current_day // 30 == 0:
             self.end_of_month()
+        print('')
+        print('Company ', self.unique_id)
+        print('Current list of workers: ', list(worker.unique_id for worker in self.households))
+        print('Current wage is: ', self.wage)
+        print('Current price is: ', self.price)
+        print('Position opened: ', self.looking_for_worker)
+        print('Current inventory: ', self.inventory)
+        print('Current wealth: ', self.wealth)
 
 
 class LenExtended(Model):
@@ -189,11 +206,22 @@ class LenExtended(Model):
             self.hh_schedule.add(h)
 
     def step(self):
+        print('##############################################')
+        print('Day #{0}'.format(self.current_day))
+        print('##############################################')
+        print('\n Companies \n')
+        print('----------------------------------------------')
+
         self.cmp_schedule.step()
+
+        print('----------------------------------------------')
+        print('\n Households \n')
+        print('----------------------------------------------')
+
         self.hh_schedule.step()
         self.current_day += 1
 
 
-empty_model = LenExtended(10, 10)
+empty_model = LenExtended(20, 4)
 empty_model.step()
 empty_model.step()
