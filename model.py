@@ -48,17 +48,20 @@ class Householder(Agent):
                                 self.company = company
                                 self.company.households.append(self)
                                 self.wage = self.company.wage
+                                self.company.looking_for_worker = False
                         else:
                             self.company.households.remove(self)
                             self.company = company
                             self.company.households.append(self)
                             self.wage = self.company.wage
+                            self.company.looking_for_worker = False
                     break
                 else:
                     if company.wage >= self.wage:
                         self.company = company
                         self.company.households.append(self)
                         self.wage = self.company.wage
+                        self.company.looking_for_worker = False
                         break
         else:
             self.wage *= 0.9
