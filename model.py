@@ -203,6 +203,7 @@ class Company(Agent):
         print('Current price is: ', self.price)
         print('Position opened: ', self.looking_for_worker)
         print('Current inventory: ', self.inventory)
+        print('Current demand is: ', self.demand)
         print('Current wealth: ', self.wealth)
 
 
