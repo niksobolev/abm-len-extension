@@ -1,6 +1,7 @@
 from mesa import Agent, Model
 from mesa.time import RandomActivation
 import random
+from utils import *
 
 
 class Householder(Agent):
@@ -22,16 +23,17 @@ class Householder(Agent):
     def search_cheaper_prices(self):
         if random.random() < 0.25:
             random_known_pick = random.choice(self.companies)
-            list_of_pretenders = []
-            for firm in self.model.cmp_schedule.agents:
-                if firm not in self.companies:
-                    for i in range(len(firm.households)):
-                        list_of_pretenders.append(firm)
-            if list_of_pretenders:
-                random_unknown_pick = random.choice(list_of_pretenders)
-                if random_unknown_pick.price/random_known_pick.price < self.critical_price_ratio:
-                    self.companies.remove(random_known_pick)
-                    self.companies.append(random_unknown_pick)
+            self.companies.remove(random_known_pick)
+            self.add_firm_by_households()
+
+    def add_firm_by_households(self):
+        firm_dict = dict()
+        for firm in self.model.cmp_schedule.agents:
+            if firm not in self.companies:
+                firm_dict[firm] = firm.households
+        sorted_households = sorted(firm_dict.items(), key=lambda x: x[1])
+        company_to_add = draw_company(sorted_households)
+        self.companies.append(company_to_add)
 
     def search_productive_firms(self):
         pass
