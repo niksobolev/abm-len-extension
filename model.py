@@ -17,8 +17,11 @@ class Householder(Agent):
         self.consumption_power = 0.9  # allows not to spend all money for consumption
         self.unemployed_attempts = 5  # how many times unemployed household tries to find a job
         self.search_job_chance = 0.1  # chance to search a job if wage is more than desired
+        self.penalty_companies = dict()
         for _ in range(7):
             self.companies.append(random.choice(model.cmp_schedule.agents))
+        for company in self.companies:
+            self.penalty_companies[company] = 0
 
     def search_cheaper_prices(self):
         if random.random() < 0.25:
@@ -36,7 +39,10 @@ class Householder(Agent):
         self.companies.append(company_to_add)
 
     def search_productive_firms(self):
-        pass
+        sorted_penalties = sorted(self.penalty_companies.items(), key=lambda x: x[1])
+        company_to_delete = draw_company(sorted_penalties)
+        self.companies.remove(company_to_delete)
+        self.add_firm_by_households()
 
     def search_new_job(self):
         for i in range(self.unemployed_attempts):
@@ -76,6 +82,8 @@ class Householder(Agent):
         for company in sorted(self.companies, key=lambda x: x.price):
             total_price = int(self.consumption * company.price)
             company.demand += self.consumption
+            if company.inventory < self.consumption:
+                self.penalty_companies[company.unique_id] += 1
             if (company.inventory > self.consumption) and (total_price < self.wealth):
                 self.wealth -= total_price
                 company.wealth += total_price
