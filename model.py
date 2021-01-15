@@ -6,7 +6,7 @@ import random
 class Householder(Agent):
     def __init__(self, unique_id, model):
         super().__init__(unique_id, model)
-        self.wealth = random.randint(2000, 4500)
+        self.wealth = random.randint(20000, 45000)
         self.wage = 0
         self.consumption = 0
         self.companies = []
