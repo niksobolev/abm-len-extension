@@ -87,7 +87,7 @@ class Householder(Agent):
         self.identify_consumption()
 
     def step(self):
-        if self.model.current_day // 30 == 0:
+        if self.model.current_day % 30 == 0:
             self.end_of_month()
         self.buy_goods()
         print('')
@@ -185,7 +185,7 @@ class Company(Agent):
 
     def step(self):
         self.produce()
-        if self.model.current_day // 30 == 0:
+        if self.model.current_day % 30 == 0:
             self.end_of_month()
         print('')
         print('Company ', self.unique_id)
