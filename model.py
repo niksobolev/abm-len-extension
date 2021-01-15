@@ -120,6 +120,7 @@ class Company(Agent):
         self.tau = 0.75  # chance to increase a price
         self.upsilon = 0.02  # max range of distribution for increasing price
         self.lambda_coefficient = 3  # how many products produced by one household per day
+        self.money_buffer_coefficient = 0.1  # how much money does company saves for a month with bad sales
         self.households = []
         self.product_price = random.randint(10, 100)
 
@@ -132,12 +133,21 @@ class Company(Agent):
         for h in self.households:
             h.wealth += self.wage
             self.wealth -= self.wage
+            if h.wage < self.wage:
+                h.wage = self.wage
 
-    def fill_money_buffer(self):
-        pass
-
-    def give_shares(self):
-        pass
+    def share_liquidity(self):
+        buffer = self.wage * len(self.households) * self.money_buffer_coefficient
+        if len(self.households) > 0:
+            liquidity_to_share = int((self.wealth - buffer)/len(self.households))
+        else:
+            liquidity_to_share = 0
+        if liquidity_to_share > 0:
+            self.wage += liquidity_to_share
+            for h in self.households:
+                h.wealth += liquidity_to_share
+                self.wealth -= liquidity_to_share
+                h.wage += liquidity_to_share
 
     # If we didn't find worker last month then increase wage
     # If we didn't loose worker for last <full_workplaces> months then decrease wage
@@ -177,8 +187,7 @@ class Company(Agent):
 
     def end_of_month(self):
         self.pay_wages()
-        self.fill_money_buffer()
-        self.give_shares()
+        self.share_liquidity()
         self.set_wage_rate()
         self.hire_or_fire()
         self.change_goods_price()
