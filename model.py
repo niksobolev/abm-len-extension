@@ -7,24 +7,28 @@ from utils import *
 class Householder(Agent):
     def __init__(self, unique_id, model):
         super().__init__(unique_id, model)
-        self.wealth = random.randint(20000, 45000)
-        self.wage = 0
-        self.consumption = 0
-        self.companies = []
-        self.company = None
-        self.wage_decreasing_coefficient = 0.95
+        self.wealth = random.randint(20000, 45000)  # initial sum of money of an agent
+        self.wage = 0  # reservation wage (expected wage)
+        self.consumption = 0  # how much goods does householder consume per day
+        self.companies = []  # list of firms where householder can buy goods (type A connection)
+        self.company = None  # firm that householder works for
+        self.wage_decreasing_coefficient = 0.9  # if household was unemployed his reservation wage decreases by 10%
         self.critical_price_ratio = 0.99  # if price in new company less that this value, replace company by new one
-        self.consumption_power = 0.9  # allows not to spend all money for consumption
-        self.unemployed_attempts = 5  # how many times unemployed household tries to find a job
-        self.search_job_chance = 0.1  # chance to search a job if wage is more than desired
+        # in paper self.critical_price_ratio is reffed as xi = 0.01, but here it is (1-xi)
+        self.consumption_power = 0.9  # allows not to spend all money for consumption (alpha)
+        self.unemployed_attempts = 5  # how many times unemployed household tries to find a job (beta)
+        self.search_job_chance = 0.1  # chance to search a job if wage is more than desired (pi)
+        self.prob_search_price = 0.25  # chance to search a better price (phi_price)
+        self.prob_search_prod = 0.25  # chance to search a new firm with higher demand (phi_quant)
+        self.a_connections_number = 7  # number of type A connections (n)
         self.penalty_companies = dict()
-        for _ in range(7):
+        for _ in range(self.a_connections_number):
             self.companies.append(random.choice(model.cmp_schedule.agents))
         for company in self.companies:
             self.penalty_companies[company] = 0
 
     def search_cheaper_prices(self):
-        if random.random() < 0.25:
+        if random.random() < self.prob_search_price:
             random_known_pick = random.choice(self.companies)
             self.companies.remove(random_known_pick)
             self.add_firm_by_households()
@@ -39,10 +43,11 @@ class Householder(Agent):
         self.companies.append(company_to_add)
 
     def search_productive_firms(self):
-        sorted_penalties = sorted(self.penalty_companies.items(), key=lambda x: x[1])
-        company_to_delete = draw_company(sorted_penalties)
-        self.companies.remove(company_to_delete)
-        self.add_firm_by_households()
+        if random.random() < self.prob_search_prod:
+            sorted_penalties = sorted(self.penalty_companies.items(), key=lambda x: x[1])
+            company_to_delete = draw_company(sorted_penalties)
+            self.companies.remove(company_to_delete)
+            self.add_firm_by_households()
 
     def search_new_job(self):
         for i in range(self.unemployed_attempts):
@@ -72,7 +77,7 @@ class Householder(Agent):
                         self.company.looking_for_worker = False
                         break
         else:
-            self.wage *= 0.9
+            self.wage *= self.wage_decreasing_coefficient
 
     def identify_consumption(self):
         average_price = sum(company.price for company in self.companies)/len(self.companies)
@@ -114,15 +119,15 @@ class Householder(Agent):
 class Company(Agent):
     def __init__(self, unique_id, model):
         super().__init__(unique_id, model)
-        self.wealth = random.randint(600000, 1000000)
-        self.wage = random.randint(29000, 35000)
-        self.price = 330 + random.randint(0,20)
-        self.looking_for_worker = False
-        self.full_workplaces = 0
-        self.demand = 100
-        self.demand_min_coefficient = 0.25
-        self.demand_max_coefficient = 1
-        self.inventory = 10
+        self.wealth = random.randint(600000, 1000000)  # initial sum of money of an agent
+        self.wage = random.randint(29000, 35000)  # wage that firm will pay to employers
+        self.price = 330 + random.randint(0,20)  # initial price of goods
+        self.looking_for_worker = False  # True if firm is looking for an employee
+        self.full_workplaces = 0  # number of days when we did not loose any employee
+        self.demand = 100  # initial demand value
+        self.demand_min_coefficient = 0.25  # if inventory is less than demand - search for a new employee (phi min)
+        self.demand_max_coefficient = 1  # if inventory left is more than demand - fire an employee (phi max)
+        self.inventory = 10  # initial inventory of firms
         self.sigma = 0.019  # percent for increasing/decreasing wage
         self.gamma = 24  # after this number of month with fulled working places we can decrease wage
         self.phi_min = 1.025  # required for counting marginal costs
@@ -131,8 +136,7 @@ class Company(Agent):
         self.upsilon = 0.02  # max range of distribution for increasing price
         self.lambda_coefficient = 3  # how many products produced by one household per day
         self.money_buffer_coefficient = 0.1  # how much money does company saves for a month with bad sales
-        self.households = []
-        self.product_price = random.randint(10, 100)
+        self.households = []  # list of employees
 
     def produce(self):
         self.inventory += len(self.households) * self.lambda_coefficient
