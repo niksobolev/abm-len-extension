@@ -37,7 +37,7 @@ class Householder(Agent):
         firm_dict = dict()
         for firm in self.model.cmp_schedule.agents:
             if firm not in self.companies:
-                firm_dict[firm] = firm.households
+                firm_dict[firm] = len(firm.households)
         sorted_households = sorted(firm_dict.items(), key=lambda x: x[1])
         company_to_add = draw_company(sorted_households)
         self.companies.append(company_to_add)
@@ -88,7 +88,7 @@ class Householder(Agent):
             total_price = int(self.consumption * company.price)
             company.demand += self.consumption
             if company.inventory < self.consumption:
-                self.penalty_companies[company.unique_id] += 1
+                self.penalty_companies[company] += 1
             if (company.inventory > self.consumption) and (total_price < self.wealth):
                 self.wealth -= total_price
                 company.wealth += total_price
