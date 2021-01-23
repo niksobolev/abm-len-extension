@@ -5,22 +5,31 @@ from utils import *
 
 
 class Householder(Agent):
-    def __init__(self, unique_id, model):
+    def __init__(self, unique_id, model, household_parameters):
         super().__init__(unique_id, model)
-        self.wealth = random.randint(20000, 45000)  # initial sum of money of an agent
-        self.wage = 0  # reservation wage (expected wage)
-        self.consumption = 0  # how much goods does householder consume per day
+        # initial sum of money of an agent
+        self.wealth = random.randint(household_parameters.min_wealth, household_parameters.max_wealth)
+        self.wage = household_parameters.default_wage   # reservation wage (expected wage)
+        self.consumption = household_parameters.default_consumption  # how much goods does householder consume per day
         self.companies = []  # list of firms where householder can buy goods (type A connection)
         self.company = None  # firm that householder works for
-        self.wage_decreasing_coefficient = 0.9  # if household was unemployed his reservation wage decreases by 10%
-        self.critical_price_ratio = 0.99  # if price in new company less that this value, replace company by new one
+        # if household was unemployed his reservation wage decreases by 10%
+        self.wage_decreasing_coefficient = household_parameters.wage_decreasing_coefficient
+        # if price in new company less that this value, replace company by new one
+        self.critical_price_ratio = household_parameters.critical_price_ratio
         # in paper self.critical_price_ratio is reffed as xi = 0.01, but here it is (1-xi)
-        self.consumption_power = 0.9  # allows not to spend all money for consumption (alpha)
-        self.unemployed_attempts = 5  # how many times unemployed household tries to find a job (beta)
-        self.search_job_chance = 0.1  # chance to search a job if wage is more than desired (pi)
-        self.prob_search_price = 0.25  # chance to search a better price (phi_price)
-        self.prob_search_prod = 0.25  # chance to search a new firm with higher demand (phi_quant)
-        self.a_connections_number = 7  # number of type A connections (n)
+        # allows not to spend all money for consumption (alpha)
+        self.consumption_power = household_parameters.consumption_power
+        # how many times unemployed household tries to find a job (beta)
+        self.unemployed_attempts = household_parameters.unemployed_attempts
+        # chance to search a job if wage is more than desired (pi)
+        self.search_job_chance = household_parameters.search_job_chance
+        # chance to search a better price (phi_price)
+        self.prob_search_price = household_parameters.prob_search_price
+        # chance to search a new firm with higher demand (phi_quant)
+        self.prob_search_prod = household_parameters.prob_search_prod
+        # number of type A connections (n)
+        self.a_connections_number = household_parameters.a_connections_number
         self.penalty_companies = dict()
         for _ in range(self.a_connections_number):
             self.companies.append(random.choice(model.cmp_schedule.agents))
@@ -123,26 +132,35 @@ class Householder(Agent):
 
 
 class Company(Agent):
-    def __init__(self, unique_id, model):
+    def __init__(self, unique_id, model, company_parameters):
         super().__init__(unique_id, model)
-        self.wealth = random.randint(600000, 1000000)  # initial sum of money of an agent
-        self.wage = random.randint(29000, 35000)  # wage that firm will pay to employers
-        self.price = 330 + random.randint(0,20)  # initial price of goods
+        # initial sum of money of an agent
+        self.wealth = random.randint(company_parameters.company_min_wealth, company_parameters.company_max_wealth)
+        # wage that firm will pay to employers
+        self.wage = random.randint(company_parameters.company_min_wage, company_parameters.company_max_wage)
+        # initial price of goods
+        self.price = company_parameters.initial_price + random.randint(company_parameters.min_random_price,
+                                                                       company_parameters.max_random_price)
         self.looking_for_worker = False  # True if firm is looking for an employee
         self.full_workplaces = 0  # number of days when we did not loose any employee
         self.workers_in_previous_month = 0  # number of worker on previous month to track if someone was hired
-        self.demand = 100  # initial demand value
-        self.demand_min_coefficient = 0.25  # if inventory is less than demand - search for a new employee (phi min)
-        self.demand_max_coefficient = 1  # if inventory left is more than demand - fire an employee (phi max)
-        self.inventory = 10  # initial inventory of firms
-        self.sigma = 0.019  # percent for increasing/decreasing wage
-        self.gamma = 24  # after this number of month with fulled working places we can decrease wage
-        self.phi_min = 1.025  # required for counting marginal costs
-        self.phi_max = 1.15  # required for counting marginal costs
-        self.tau = 0.75  # chance to increase a price
-        self.upsilon = 0.02  # max range of distribution for increasing price
-        self.lambda_coefficient = 3  # how many products produced by one household per day
-        self.money_buffer_coefficient = 0.1  # how much money does company saves for a month with bad sales
+        self.demand = company_parameters.demand  # initial demand value
+        # if inventory is less than demand - search for a new employee (phi min)
+        self.demand_min_coefficient = company_parameters.demand_min
+        # if inventory left is more than demand - fire an employee (phi max)
+        self.demand_max_coefficient = company_parameters.demand_max
+        self.inventory = company_parameters.inventory  # initial inventory of firms
+        self.sigma = company_parameters.sigma  # percent for increasing/decreasing wage
+        # after this number of month with fulled working places we can decrease wage
+        self.gamma = company_parameters.gamma
+        self.phi_min = company_parameters.phi_min  # required for counting marginal costs
+        self.phi_max = company_parameters.phi_max  # required for counting marginal costs
+        self.tau = company_parameters.tau  # chance to increase a price
+        self.upsilon = company_parameters.upsilon  # max range of distribution for increasing price
+        # how many products produced by one household per day
+        self.lambda_coefficient = company_parameters.lambda_coefficient
+        # how much money does company saves for a month with bad sales
+        self.money_buffer_coefficient = company_parameters.money_buffer_coefficient
         self.households = []  # list of employees
 
     def produce(self):
@@ -238,7 +256,8 @@ class Company(Agent):
 
 
 class LenExtended(Model):
-    def __init__(self, num_hh, num_cmp):
+    def __init__(self, num_hh, num_cmp, household_parameters, company_parameters):
+
         self.num_hh = num_hh
         self.num_cmp = num_cmp
         self.current_day = 0
@@ -246,11 +265,11 @@ class LenExtended(Model):
         self.cmp_schedule = RandomActivation(self)
 
         for i in range(self.num_cmp):
-            c = Company(i, self)
+            c = Company(i, self, company_parameters)
             self.cmp_schedule.add(c)
 
         for i in range(self.num_hh):
-            h = Householder(i, self)
+            h = Householder(i, self, household_parameters)
             self.hh_schedule.add(h)
 
     def step(self):
@@ -270,7 +289,67 @@ class LenExtended(Model):
         self.current_day += 1
 
 
-empty_model = LenExtended(20, 4)
-number_of_steps = 10
-for i in range(number_of_steps):
-    empty_model.step()
+class HouseholdParameters:
+    def __init__(self, min_wealth, max_wealth, default_wage, default_consumption, wage_decreasing_coefficient,
+                 critical_price_ratio, consumption_power, unemployed_attempts, search_job_chance, prob_search_price,
+                 prob_search_prod, a_connections_number):
+        self.min_wealth = min_wealth
+        self.max_wealth = max_wealth
+        self.default_wage = default_wage
+        self.default_consumption = default_consumption
+        self.wage_decreasing_coefficient = wage_decreasing_coefficient
+        self.critical_price_ratio = critical_price_ratio
+        self.consumption_power = consumption_power
+        self.unemployed_attempts = unemployed_attempts
+        self.search_job_chance = search_job_chance
+        self.prob_search_price = prob_search_price
+        self.prob_search_prod = prob_search_prod
+        self.a_connections_number = a_connections_number
+
+
+class CompanyParameters:
+    def __init__(self, company_min_wealth, initial_price, company_max_wealth, company_min_wage, company_max_wage,
+                 inventory, min_random_price, max_random_price, demand, demand_min, demand_max, sigma, gamma, phi_min,
+                 phi_max, tau, upsilon, lambda_coefficient, money_buffer_coefficient):
+        self.company_min_wealth = company_min_wealth
+        self.initial_price = initial_price
+        self.company_max_wealth = company_max_wealth
+        self.company_min_wage = company_min_wage
+        self.company_max_wage = company_max_wage
+        self.inventory = inventory
+        self.min_random_price = min_random_price
+        self.max_random_price = max_random_price
+        self.demand = demand
+        self.demand_min = demand_min
+        self.demand_max = demand_max
+        self.sigma = sigma
+        self.gamma = gamma
+        self.phi_min = phi_min
+        self.phi_max = phi_max
+        self.tau = tau
+        self.upsilon = upsilon
+        self.lambda_coefficient = lambda_coefficient
+        self.money_buffer_coefficient = money_buffer_coefficient
+
+
+def run_model(number_of_households, number_of_companies, number_of_steps, min_wealth=20000, max_wealth=45000,
+              default_wage=0, default_consumption=0, wage_decreasing_coefficient=0.9, critical_price_ratio=0.99,
+              consumption_power=0.9, unemployed_attempts=5, search_job_chance=0.1, prob_search_price=0.25,
+              prob_search_prod=0.25, a_connections_number=7, company_min_wealth=600000, initial_price=330,
+              company_max_wealth=1000000, company_min_wage=29000, company_max_wage=35000,  inventory=10,
+              min_random_price=0, max_random_price=20, demand=100, demand_min=0.25, demand_max=1, sigma=0.019,
+              gamma=24, phi_min=1.025, phi_max=1.15, tau=0.75, upsilon=0.02, lambda_coefficient=3,
+              money_buffer_coefficient=0.1):
+
+    household_parameters = HouseholdParameters(min_wealth, max_wealth, default_wage, default_consumption,
+                                               wage_decreasing_coefficient, critical_price_ratio, consumption_power,
+                                               unemployed_attempts, search_job_chance, prob_search_price,
+                                               prob_search_prod, a_connections_number)
+    company_parameters = CompanyParameters(company_min_wealth, initial_price, company_max_wealth, company_min_wage,
+                                           company_max_wage, inventory, min_random_price, max_random_price, demand,
+                                           demand_min, demand_max, sigma, gamma, phi_min, phi_max, tau, upsilon,
+                                           lambda_coefficient, money_buffer_coefficient)
+
+    model = LenExtended(number_of_households, number_of_companies, household_parameters, company_parameters)
+    for _ in range(number_of_steps):
+        model.step()
