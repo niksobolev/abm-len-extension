@@ -130,6 +130,7 @@ class Company(Agent):
         self.price = 330 + random.randint(0,20)  # initial price of goods
         self.looking_for_worker = False  # True if firm is looking for an employee
         self.full_workplaces = 0  # number of days when we did not loose any employee
+        self.workers_in_previous_month = 0  # number of worker on previous month to track if someone was hired
         self.demand = 100  # initial demand value
         self.demand_min_coefficient = 0.25  # if inventory is less than demand - search for a new employee (phi min)
         self.demand_max_coefficient = 1  # if inventory left is more than demand - fire an employee (phi max)
@@ -168,6 +169,14 @@ class Company(Agent):
                 h.wealth += liquidity_to_share
                 self.wealth -= liquidity_to_share
                 h.wage += liquidity_to_share
+
+    def count_workers(self):
+        number_of_households = len(self.households)
+        if number_of_households >= self.workers_in_previous_month:
+            self.full_workplaces += 1
+        else:
+            self.full_workplaces = 0
+        self.workers_in_previous_month = number_of_households
 
     # If we didn't find worker last month then increase wage
     # If we didn't loose worker for last <full_workplaces> months then decrease wage
@@ -208,6 +217,7 @@ class Company(Agent):
     def end_of_month(self):
         self.pay_wages()
         self.share_liquidity()
+        self.count_workers()
         self.set_wage_rate()
         self.hire_or_fire()
         self.change_goods_price()
