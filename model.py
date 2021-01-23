@@ -2,6 +2,7 @@ from mesa import Agent, Model
 from mesa.time import RandomActivation
 import random
 from utils import *
+import networkx as nx
 
 
 class Householder(Agent):
@@ -31,10 +32,16 @@ class Householder(Agent):
         # number of type A connections (n)
         self.a_connections_number = household_parameters.a_connections_number
         self.penalty_companies = dict()
+        self.preferred_companies = dict()
+        self.social_influence = dict()
+        self.most_preferred = None
+        self.influenced_companies = dict()
         for _ in range(self.a_connections_number):
             self.companies.append(random.choice(model.cmp_schedule.agents))
         for company in self.companies:
             self.penalty_companies[company] = 0
+            self.preferred_companies[company] = 0
+            self.social_influence[company] = 1
 
     def search_cheaper_prices(self):
         if random.random() < self.prob_search_price:
@@ -103,18 +110,37 @@ class Householder(Agent):
                 self.wealth -= total_price
                 company.wealth += total_price
                 company.inventory -= self.consumption
+                self.preferred_companies[company] += 1
                 break
 
-    def update_penalties(self):
+    def calculate_most_preferred(self):
+        self.most_preferred = sorted(self.preferred_companies.items(), key=lambda x: x[1], reverse=True)[0]
+
+    def calculate_social_influence(self):
+        neighbors_ids = self.model.social_network.neighbors(self.unique_id)
+        neighbor_companies = dict()
+        for n_id in neighbors_ids:
+            neighbor_company_tuple = self.model.hh_schedule._agents[n_id].most_preferred
+            if neighbor_company_tuple is not None:
+                if neighbor_company_tuple[0] in neighbor_companies:
+                    neighbor_companies[neighbor_company_tuple[0]] += neighbor_company_tuple[1]
+                elif neighbor_company_tuple[1] != 0:
+                    neighbor_companies[neighbor_company_tuple[0]] = neighbor_company_tuple[1]
+        self.influenced_companies = neighbor_companies
+
+    def update_penalties_and_preferred(self):
         for company in self.companies:
             self.penalty_companies[company] = 0
+            self.preferred_companies[company] = 0
 
     def end_of_month(self):
         self.search_cheaper_prices()
         self.search_productive_firms()
         self.search_new_job()
         self.identify_consumption()
-        self.update_penalties()
+        self.calculate_most_preferred()
+        self.calculate_social_influence()
+        self.update_penalties_and_preferred()
 
     def step(self):
         if self.model.current_day % 30 == 0:
@@ -263,7 +289,7 @@ class LenExtended(Model):
         self.current_day = 0
         self.hh_schedule = RandomActivation(self)
         self.cmp_schedule = RandomActivation(self)
-
+        self.social_network = nx.gnp_random_graph(num_hh, 0.99)
         for i in range(self.num_cmp):
             c = Company(i, self, company_parameters)
             self.cmp_schedule.add(c)
