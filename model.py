@@ -1,5 +1,6 @@
 from mesa import Agent, Model
 from mesa.time import RandomActivation
+import math
 import random
 from utils import *
 
@@ -7,7 +8,7 @@ from utils import *
 class Householder(Agent):
     def __init__(self, unique_id, model):
         super().__init__(unique_id, model)
-        self.wealth = random.randint(20000, 45000)  # initial sum of money of an agent
+        self.wealth = random.randint(10000, 25000)  # initial sum of money of an agent
         self.wage = 0  # reservation wage (expected wage)
         self.consumption = 0  # how much goods does householder consume per day
         self.companies = []  # list of firms where householder can buy goods (type A connection)
@@ -84,7 +85,7 @@ class Householder(Agent):
         self.consumption = int((self.wealth/(30 * average_price)) ** self.consumption_power)
 
     def buy_goods(self):
-        for company in sorted(self.companies, key=lambda x: x.price):
+        for company in sorted(self.companies, key=lambda x: x.price * max(1 - math.sqrt(x.marketing_boost) / 100, 0.5)):
             total_price = int(self.consumption * company.price)
             company.demand += self.consumption
             if company.inventory < self.consumption:
@@ -96,8 +97,8 @@ class Householder(Agent):
                 break
 
     def end_of_month(self):
-        self.search_cheaper_prices()
-        self.search_productive_firms()
+        #self.search_cheaper_prices()
+        #self.search_productive_firms()
         self.search_new_job()
         self.identify_consumption()
 
@@ -119,9 +120,9 @@ class Householder(Agent):
 class Company(Agent):
     def __init__(self, unique_id, model):
         super().__init__(unique_id, model)
-        self.wealth = random.randint(600000, 1000000)  # initial sum of money of an agent
+        self.wealth = random.randint(30000, 50000)  # initial sum of money of an agent
         self.wage = random.randint(29000, 35000)  # wage that firm will pay to employers
-        self.price = 330 + random.randint(0,20)  # initial price of goods
+        self.price = 330 + random.randint(0, 20)  # initial price of goods
         self.looking_for_worker = False  # True if firm is looking for an employee
         self.full_workplaces = 0  # number of days when we did not loose any employee
         self.demand = 100  # initial demand value
@@ -134,12 +135,18 @@ class Company(Agent):
         self.phi_max = 1.15  # required for counting marginal costs
         self.tau = 0.75  # chance to increase a price
         self.upsilon = 0.02  # max range of distribution for increasing price
-        self.lambda_coefficient = 3  # how many products produced by one household per day
+        self.lambda_coefficient = 10  # how many products produced by one household per day
         self.money_buffer_coefficient = 0.1  # how much money does company saves for a month with bad sales
         self.households = []  # list of employees
+        self.marketing_investments = 0.2  # ratio of power invested in marketing
+        self.marketing_boost = 0  # price multiplicator gathered from marketing investments
 
     def produce(self):
-        self.inventory += len(self.households) * self.lambda_coefficient
+        self.inventory += len(self.households) * self.lambda_coefficient * (1 - self.marketing_investments)
+
+    def marketing_raise(self):
+        self.marketing_boost = self.marketing_boost + len(self.households) * self.marketing_investments * self.lambda_coefficient
+
 
     def pay_wages(self):
         if len(self.households) * self.wage > self.wealth:
@@ -199,7 +206,20 @@ class Company(Agent):
             if random.random() < self.tau:
                 self.price = self.price * (1 - random.uniform(0, self.upsilon))
 
+    def change_marketing_investments(self):
+        if self.inventory > 0.05 * self.demand:
+            self.marketing_investments *= 1.1
+        elif self.marketing_investments > 0.02:
+            self.marketing_investments *= 0.8
+
+
+    def invest_in_marketing(self):
+        self.marketing_boost *= 0.8
+
+
     def end_of_month(self):
+        self.change_marketing_investments()
+        self.invest_in_marketing()
         self.pay_wages()
         self.share_liquidity()
         self.set_wage_rate()
@@ -207,6 +227,7 @@ class Company(Agent):
         self.change_goods_price()
 
     def step(self):
+        self.marketing_raise()
         self.produce()
         if self.model.current_day % 30 == 0:
             self.end_of_month()
@@ -254,7 +275,7 @@ class LenExtended(Model):
         self.current_day += 1
 
 
-empty_model = LenExtended(20, 4)
-number_of_steps = 10
+empty_model = LenExtended(30, 30)
+number_of_steps = 10000
 for i in range(number_of_steps):
     empty_model.step()
