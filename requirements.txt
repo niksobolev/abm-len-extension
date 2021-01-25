@@ -6,3 +6,4 @@ statsmodels
 salib
 pandas
 numpy
+networkx
