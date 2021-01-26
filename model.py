@@ -1,5 +1,6 @@
 from mesa import Agent, Model
 from mesa.time import RandomActivation
+from mesa.datacollection import DataCollector
 import math
 import random
 from utils import *
@@ -318,8 +319,49 @@ class LenExtended(Model):
         for i in range(self.num_hh):
             h = Householder(i, self, household_parameters)
             self.hh_schedule.add(h)
+            
+        # Datacollector
+        self.datacollector = DataCollector(
+            # Household parameters
+             {"hh_wealth": lambda m: h.wealth,
+              "hh_wage": lambda m: h.wage,
+              "consumption": lambda m: h.consumption,
+              # "Companies": lambda m: h.companies,
+              # "company": lambda m: h.company,
+              "wage_decreasing_coefficient": lambda m: h.wage_decreasing_coefficient,
+              "critical_price_ratio": lambda m: h.critical_price_ratio,
+              "consumption_power": lambda m: h.consumption_power, 
+              "unemployed_attempts": lambda m: h.unemployed_attempts, 
+              "search_job_chance": lambda m: h.search_job_chance, 
+              "prob_search_price": lambda m: h.prob_search_price, 
+              "prob_search_prod": lambda m: h.prob_search_prod,
+              "a_connections_number": lambda m: h.a_connections_number,
+
+              # Company parameters
+              # "C_wealth": lambda m: c.wealth,
+              "C_wage": lambda m: c.wage,
+              "price": lambda m: c.price,
+              "looking_for_worker": lambda m: c.looking_for_worker,
+              "full_workplaces": lambda m: c.full_workplaces,
+              "workers_in_previous_month": lambda m: c.workers_in_previous_month,
+              "demand": lambda m: c.demand,
+              "demand_min_coefficient": lambda m: c.demand_min_coefficient,
+              "demand_max_coefficient": lambda m: c.demand_max_coefficient,
+              "inventory": lambda m: c.inventory,
+              "sigma": lambda m: c.sigma,
+              "gamma": lambda m: c.gamma,
+              "phi_min": lambda m: c.phi_min,
+              "phi_max": lambda m: c.phi_max,
+              "tau": lambda m: c.tau,
+              "upsilon": lambda m: c.upsilon,
+              "lambda_coefficient": lambda m: c.lambda_coefficient,
+              "money_buffer_coefficient": lambda m: c.money_buffer_coefficient,
+              "households": lambda m: c.households,
+              "marketing_investments": lambda m: c.marketing_investments,
+              "marketing_boost": lambda m: c.marketing_boost})
 
     def step(self):
+        self.datacollector.collect(self)
         print('##############################################')
         print('Day #{0}'.format(self.current_day))
         print('##############################################')
