@@ -12,7 +12,7 @@ class Householder(Agent):
         super().__init__(unique_id, model)
         # initial sum of money of an agent
         self.wealth = random.randint(household_parameters.min_wealth, household_parameters.max_wealth)
-        self.wage = household_parameters.default_wage   # reservation wage (expected wage)
+        self.wage = household_parameters.default_wage  # reservation wage (expected wage)
         self.consumption = household_parameters.default_consumption  # how much goods does householder consume per day
         self.companies = []  # list of firms where householder can buy goods (type A connection)
         self.company = None  # firm that householder works for
@@ -103,8 +103,8 @@ class Householder(Agent):
             self.wage *= self.wage_decreasing_coefficient
 
     def identify_consumption(self):
-        average_price = sum(company.price for company in self.companies)/len(self.companies)
-        self.consumption = int((self.wealth/(30 * average_price)) ** self.consumption_power)
+        average_price = sum(company.price for company in self.companies) / len(self.companies)
+        self.consumption = int((self.wealth / (30 * average_price)) ** self.consumption_power)
 
     def buy_goods(self):
         for company in sorted(self.companies, key=lambda x: x.price * max(1 - math.sqrt(x.marketing_boost) / 100, 0.5)):
@@ -140,8 +140,8 @@ class Householder(Agent):
             self.preferred_companies[company] = 0
 
     def end_of_month(self):
-        #self.search_cheaper_prices()
-        #self.search_productive_firms()
+        # self.search_cheaper_prices()
+        # self.search_productive_firms()
         self.search_new_job()
         self.identify_consumption()
         self.calculate_most_preferred()
@@ -187,16 +187,18 @@ class Company(Agent):
         self.households = []  # list of employees
         self.marketing_investments = company_parameters.marketing_investments  # ratio of power invested in marketing
         self.marketing_boost = 0  # price multiplicator gathered from marketing investments
+        self.start_marketing = company_parameters.start_marketing
 
     def produce(self):
         self.inventory += len(self.households) * self.lambda_coefficient * (1 - self.marketing_investments)
 
     def marketing_raise(self):
-        self.marketing_boost = self.marketing_boost + len(self.households) * self.marketing_investments * self.lambda_coefficient
+        self.marketing_boost = self.marketing_boost + len(
+            self.households) * self.marketing_investments * self.lambda_coefficient
 
     def pay_wages(self):
         if len(self.households) * self.wage > self.wealth:
-            self.wage = int(self.wealth/len(self.households))
+            self.wage = int(self.wealth / len(self.households))
         for h in self.households:
             h.wealth += self.wage
             self.wealth -= self.wage
@@ -206,7 +208,7 @@ class Company(Agent):
     def share_liquidity(self):
         buffer = self.wage * len(self.households) * self.money_buffer_coefficient
         if len(self.households) > 0:
-            liquidity_to_share = int((self.wealth - buffer)/len(self.households))
+            liquidity_to_share = int((self.wealth - buffer) / len(self.households))
         else:
             liquidity_to_share = 0
         if liquidity_to_share > 0:
@@ -252,7 +254,7 @@ class Company(Agent):
     # than 2.5 percent) then we need to increase price. If we earn more than 15%
     # of marginal cost we should decrease price.
     def change_goods_price(self):
-        marginal_costs = self.wage/(30 * self.lambda_coefficient)
+        marginal_costs = self.wage / (30 * self.lambda_coefficient)
         if self.price < self.phi_min * marginal_costs:
             if random.random() < self.tau:
                 self.price = self.price * (1 + random.uniform(0, self.upsilon))
@@ -261,9 +263,9 @@ class Company(Agent):
                 self.price = self.price * (1 - random.uniform(0, self.upsilon))
 
     def change_marketing_investments(self):
-        if self.inventory > 0.05 * self.demand:
+        if self.inventory > self.start_marketing * self.demand:
             self.marketing_investments *= 1.1
-        elif self.marketing_investments > 0.02:
+        elif self.marketing_investments < self.start_marketing * 0.5:
             self.marketing_investments *= 0.8
 
     def invest_in_marketing(self):
@@ -302,46 +304,46 @@ class LenExtended(Model):
         for i in range(self.num_hh):
             h = Householder(i, self, household_parameters)
             self.hh_schedule.add(h)
-            
+
         # Datacollector
         self.datacollector = DataCollector(
             # Household parameters
-             {"hh_wealth": lambda m: h.wealth,
-              "hh_wage": lambda m: h.wage,
-              "consumption": lambda m: h.consumption,
-              # "Companies": lambda m: h.companies,
-              # "company": lambda m: h.company,
-              "wage_decreasing_coefficient": lambda m: h.wage_decreasing_coefficient,
-              "critical_price_ratio": lambda m: h.critical_price_ratio,
-              "consumption_power": lambda m: h.consumption_power, 
-              "unemployed_attempts": lambda m: h.unemployed_attempts, 
-              "search_job_chance": lambda m: h.search_job_chance, 
-              "prob_search_price": lambda m: h.prob_search_price, 
-              "prob_search_prod": lambda m: h.prob_search_prod,
-              "a_connections_number": lambda m: h.a_connections_number,
+            {"hh_wealth": lambda m: h.wealth,
+             "hh_wage": lambda m: h.wage,
+             "consumption": lambda m: h.consumption,
+             "companies": lambda m: h.companies,
+             "company": lambda m: h.company,
+             # "wage_decreasing_coefficient": lambda m: h.wage_decreasing_coefficient,
+             # "critical_price_ratio": lambda m: h.critical_price_ratio,
+             # "consumption_power": lambda m: h.consumption_power,
+             # "unemployed_attempts": lambda m: h.unemployed_attempts,
+             # "search_job_chance": lambda m: h.search_job_chance,
+             # "prob_search_price": lambda m: h.prob_search_price,
+             # "prob_search_prod": lambda m: h.prob_search_prod,
+             # "a_connections_number": lambda m: h.a_connections_number,
 
-              # Company parameters
-              # "C_wealth": lambda m: c.wealth,
-              "C_wage": lambda m: c.wage,
-              "price": lambda m: c.price,
-              "looking_for_worker": lambda m: c.looking_for_worker,
-              "full_workplaces": lambda m: c.full_workplaces,
-              "workers_in_previous_month": lambda m: c.workers_in_previous_month,
-              "demand": lambda m: c.demand,
-              "demand_min_coefficient": lambda m: c.demand_min_coefficient,
-              "demand_max_coefficient": lambda m: c.demand_max_coefficient,
-              "inventory": lambda m: c.inventory,
-              "sigma": lambda m: c.sigma,
-              "gamma": lambda m: c.gamma,
-              "phi_min": lambda m: c.phi_min,
-              "phi_max": lambda m: c.phi_max,
-              "tau": lambda m: c.tau,
-              "upsilon": lambda m: c.upsilon,
-              "lambda_coefficient": lambda m: c.lambda_coefficient,
-              "money_buffer_coefficient": lambda m: c.money_buffer_coefficient,
-              "households": lambda m: c.households,
-              "marketing_investments": lambda m: c.marketing_investments,
-              "marketing_boost": lambda m: c.marketing_boost})
+             # Company parameters
+             "C_wealth": lambda m: c.wealth,
+             "C_wage": lambda m: c.wage,
+             "price": lambda m: c.price,
+             "looking_for_worker": lambda m: c.looking_for_worker,
+             # "full_workplaces": lambda m: c.full_workplaces,
+             # "workers_in_previous_month": lambda m: c.workers_in_previous_month,
+             "demand": lambda m: c.demand,
+             # "demand_min_coefficient": lambda m: c.demand_min_coefficient,
+             # "demand_max_coefficient": lambda m: c.demand_max_coefficient,
+             "inventory": lambda m: c.inventory,
+             # "sigma": lambda m: c.sigma,
+             "gamma": lambda m: c.gamma,
+             # "phi_min": lambda m: c.phi_min,
+             # "phi_max": lambda m: c.phi_max,
+             # "tau": lambda m: c.tau,
+             # "upsilon": lambda m: c.upsilon,
+             "lambda_coefficient": lambda m: c.lambda_coefficient,
+             # "money_buffer_coefficient": lambda m: c.money_buffer_coefficient,
+             "households": lambda m: c.households,
+             "marketing_investments": lambda m: c.marketing_investments,
+             "marketing_boost": lambda m: c.marketing_boost})
 
     def step(self):
         self.datacollector.collect(self)
@@ -399,11 +401,10 @@ def run_model(number_of_households, number_of_companies, number_of_steps, min_we
               default_wage=0, default_consumption=0, wage_decreasing_coefficient=0.9, critical_price_ratio=0.99,
               consumption_power=0.9, unemployed_attempts=5, search_job_chance=0.1, prob_search_price=0.25,
               prob_search_prod=0.25, a_connections_number=7, company_min_wealth=600000, initial_price=330,
-              company_max_wealth=1000000, company_min_wage=29000, company_max_wage=35000,  inventory=10,
+              company_max_wealth=1000000, company_min_wage=29000, company_max_wage=35000, inventory=10,
               min_random_price=0, max_random_price=20, demand=100, demand_min=0.25, demand_max=1, sigma=0.019,
               gamma=24, phi_min=1.025, phi_max=1.15, tau=0.75, upsilon=0.02, lambda_coefficient=3,
-              money_buffer_coefficient=0.1, marketing_investments=0.2):
-
+              money_buffer_coefficient=0.1, marketing_investments=0.2, start_marketing=0.05):
     household_parameters = HouseholdParameters(min_wealth, max_wealth, default_wage, default_consumption,
                                                wage_decreasing_coefficient, critical_price_ratio, consumption_power,
                                                unemployed_attempts, search_job_chance, prob_search_price,
@@ -411,7 +412,8 @@ def run_model(number_of_households, number_of_companies, number_of_steps, min_we
     company_parameters = CompanyParameters(company_min_wealth, initial_price, company_max_wealth, company_min_wage,
                                            company_max_wage, inventory, min_random_price, max_random_price, demand,
                                            demand_min, demand_max, sigma, gamma, phi_min, phi_max, tau, upsilon,
-                                           lambda_coefficient, money_buffer_coefficient, marketing_investments)
+                                           lambda_coefficient, money_buffer_coefficient, marketing_investments,
+                                           start_marketing)
 
     abm_model = LenExtended(number_of_households, number_of_companies, household_parameters, company_parameters)
     for _ in range(number_of_steps):
