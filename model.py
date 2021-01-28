@@ -296,7 +296,7 @@ class LenExtended(Model):
         self.current_day = 0
         self.hh_schedule = RandomActivation(self)
         self.cmp_schedule = RandomActivation(self)
-        self.social_network = nx.gnp_random_graph(num_hh, 0.99)
+        self.social_network = nx.gnp_random_graph(num_hh, 0.1)
         for i in range(self.num_cmp):
             c = Company(i, self, company_parameters)
             self.cmp_schedule.add(c)
