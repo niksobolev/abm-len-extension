@@ -1,5 +1,5 @@
 from mesa import Agent, Model
-from mesa.time import RandomActivation
+from mesa.time import RandomActivation, BaseScheduler
 from mesa.datacollection import DataCollector
 import math
 import random
@@ -308,11 +308,11 @@ class LenExtended(Model):
         # Datacollector
         self.datacollector = DataCollector(
             # Household parameters
-            {"hh_wealth": lambda m: h.wealth,
+            {"hh_wealth": lambda m: [x.wealth for x in self.hh_schedule.agent_buffer()],
              "hh_wage": lambda m: h.wage,
              "consumption": lambda m: h.consumption,
              "companies": lambda m: h.companies,
-             "company": lambda m: h.company,
+             "company": lambda m: [x.company for x in self.hh_schedule.agent_buffer()],
              # "wage_decreasing_coefficient": lambda m: h.wage_decreasing_coefficient,
              # "critical_price_ratio": lambda m: h.critical_price_ratio,
              # "consumption_power": lambda m: h.consumption_power,
@@ -341,15 +341,16 @@ class LenExtended(Model):
              # "upsilon": lambda m: c.upsilon,
              "lambda_coefficient": lambda m: c.lambda_coefficient,
              # "money_buffer_coefficient": lambda m: c.money_buffer_coefficient,
-             "households": lambda m: c.households,
+             "households": lambda m: [len(x.households) for x in self.cmp_schedule.agent_buffer()],
              "marketing_investments": lambda m: c.marketing_investments,
              "marketing_boost": lambda m: c.marketing_boost})
 
     def step(self):
-        self.datacollector.collect(self)
-
         self.cmp_schedule.step()
         self.hh_schedule.step()
+        if self.model.current_day % 30 == 0:
+            self.datacollector.collect(self)
+
         self.current_day += 1
 
 
