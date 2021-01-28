@@ -409,6 +409,8 @@ def run_model(number_of_households, number_of_companies, number_of_steps, min_we
                                            demand_min, demand_max, sigma, gamma, phi_min, phi_max, tau, upsilon,
                                            lambda_coefficient, money_buffer_coefficient, marketing_investments)
 
-    model = LenExtended(number_of_households, number_of_companies, household_parameters, company_parameters)
+    abm_model = LenExtended(number_of_households, number_of_companies, household_parameters, company_parameters)
     for _ in range(number_of_steps):
-        model.step()
+        abm_model.step()
+
+    return abm_model
