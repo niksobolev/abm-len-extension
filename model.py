@@ -374,7 +374,8 @@ class HouseholdParameters:
 class CompanyParameters:
     def __init__(self, company_min_wealth, initial_price, company_max_wealth, company_min_wage, company_max_wage,
                  inventory, min_random_price, max_random_price, demand, demand_min, demand_max, sigma, gamma, phi_min,
-                 phi_max, tau, upsilon, lambda_coefficient, money_buffer_coefficient, marketing_investments):
+                 phi_max, tau, upsilon, lambda_coefficient, money_buffer_coefficient, marketing_investments,
+                 start_marketing):
         self.company_min_wealth = company_min_wealth
         self.initial_price = initial_price
         self.company_max_wealth = company_max_wealth
@@ -395,6 +396,7 @@ class CompanyParameters:
         self.lambda_coefficient = lambda_coefficient
         self.money_buffer_coefficient = money_buffer_coefficient
         self.marketing_investments = marketing_investments
+        self.start_marketing = start_marketing
 
 
 def run_model(number_of_households, number_of_companies, number_of_steps, min_wealth=20000, max_wealth=45000,
