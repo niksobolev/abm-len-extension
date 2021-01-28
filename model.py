@@ -148,15 +148,6 @@ class Householder(Agent):
         if self.model.current_day % 30 == 0:
             self.end_of_month()
         self.buy_goods()
-        print('')
-        print('Household ', self.unique_id)
-        print('Current wealth:', self.wealth)
-        try:
-            print('Working for company:', self.company.unique_id)
-            print('Real wage is:', self.company.wage)
-        except:
-            print('Unemployed')
-        print('Desired wage is:', self.wage)
 
 
 class Company(Agent):
@@ -198,7 +189,6 @@ class Company(Agent):
 
     def marketing_raise(self):
         self.marketing_boost = self.marketing_boost + len(self.households) * self.marketing_investments * self.lambda_coefficient
-
 
     def pay_wages(self):
         if len(self.households) * self.wage > self.wealth:
@@ -272,10 +262,8 @@ class Company(Agent):
         elif self.marketing_investments > 0.02:
             self.marketing_investments *= 0.8
 
-
     def invest_in_marketing(self):
         self.marketing_boost *= 0.8
-
 
     def end_of_month(self):
         self.change_marketing_investments()
@@ -292,15 +280,6 @@ class Company(Agent):
         self.produce()
         if self.model.current_day % 30 == 0:
             self.end_of_month()
-        print('')
-        print('Company ', self.unique_id)
-        print('Current list of workers: ', list(worker.unique_id for worker in self.households))
-        print('Current wage is: ', self.wage)
-        print('Current price is: ', self.price)
-        print('Position opened: ', self.looking_for_worker)
-        print('Current inventory: ', self.inventory)
-        print('Current demand is: ', self.demand)
-        print('Current wealth: ', self.wealth)
 
 
 class LenExtended(Model):
@@ -362,21 +341,10 @@ class LenExtended(Model):
 
     def step(self):
         self.datacollector.collect(self)
-        print('##############################################')
-        print('Day #{0}'.format(self.current_day))
-        print('##############################################')
-        print('\n Companies \n')
-        print('----------------------------------------------')
 
         self.cmp_schedule.step()
-
-        print('----------------------------------------------')
-        print('\n Households \n')
-        print('----------------------------------------------')
-
         self.hh_schedule.step()
         self.current_day += 1
-
 
 
 class HouseholdParameters:
