@@ -48,8 +48,10 @@ class Householder(Agent):
     def search_cheaper_prices(self):
         if random.random() < self.prob_search_price:
             random_known_pick = random.choice(self.companies)
-            self.companies.remove(random_known_pick)
-            self.add_firm_by_households()
+            company_to_add = self.add_firm_by_households()
+            if company_to_add.price / random_known_pick.price < self.critical_price_ratio:
+                self.companies.remove(random_known_pick)
+                self.companies.append(company_to_add)
 
     def add_firm_by_households(self):
         firm_dict = dict()
@@ -57,15 +59,17 @@ class Householder(Agent):
             if firm not in self.companies:
                 firm_dict[firm] = len(firm.households)
         sorted_households = sorted(firm_dict.items(), key=lambda x: x[1])
+        company_to_add = None
         if sorted_households:
             company_to_add = draw_company(sorted_households)
-            self.companies.append(company_to_add)
+        return company_to_add
 
     def search_productive_firms(self):
         if random.random() < self.prob_search_prod:
             sorted_penalties = sorted(self.penalty_companies.items(), key=lambda x: x[1])
             company_to_delete = draw_company(sorted_penalties)
-            self.add_firm_by_households()
+            company_to_add = self.add_firm_by_households()
+            self.companies.append(company_to_add)
             self.companies.remove(company_to_delete)
 
     def search_new_job(self):
