@@ -75,6 +75,13 @@ class Householder(Agent):
             self.companies.append(company_to_add)
             self.companies.remove(company_to_delete)
 
+    def get_new_company_from_network(self):
+        if random.random() < self.prob_search_prod:
+            most_influenced = sorted(self.influenced_companies.items(), key=lambda x: x[1], reverse=True)[0]
+            random_known_pick = random.choice(self.companies)
+            self.companies.remove(random_known_pick)
+            self.companies.append(most_influenced)
+
     def search_new_job(self):
         for i in range(self.unemployed_attempts):
             company = random.choice(self.model.cmp_schedule.agents)
@@ -120,7 +127,9 @@ class Householder(Agent):
             if self.use_network:
                 if infl_company in self.influenced_companies:
                     infl = self.influenced_companies[infl_company]
-                    return 1 - math.sqrt(infl)
+                    return max(1 - math.sqrt(infl), 0.95)
+                else:
+                    return 1
             else:
                 return 1
 
@@ -143,7 +152,7 @@ class Householder(Agent):
     def calculate_social_influence(self):
         neighbors_ids = self.model.social_network.neighbors(self.unique_id)
         neighbor_companies = dict()
-        num_neigh = len(neighbors_ids)
+        num_neigh = len(list(neighbors_ids))
         for n_id in neighbors_ids:
             neighbor_company_tuple = self.model.hh_schedule._agents[n_id].most_preferred
             if neighbor_company_tuple is not None:
@@ -159,8 +168,9 @@ class Householder(Agent):
             self.preferred_companies[company] = 0
 
     def end_of_month(self):
-        # self.search_cheaper_prices()
-        # self.search_productive_firms()
+        self.search_cheaper_prices()
+        self.search_productive_firms()
+        self.get_new_company_from_network()
         self.search_new_job()
         self.identify_consumption()
         self.calculate_most_preferred()
