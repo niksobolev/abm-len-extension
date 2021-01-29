@@ -349,7 +349,7 @@ class LenExtended(Model):
     def step(self):
         self.cmp_schedule.step()
         self.hh_schedule.step()
-        if self.model.current_day % 30 == 0:
+        if self.current_day % 30 == 0:
             self.datacollector.collect(self)
 
         self.current_day += 1
