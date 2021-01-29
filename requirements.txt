@@ -1,9 +1,10 @@
 -i https://pypi.python.org/simple
 
-mesa
+mesa~=0.8.8.1
 axelrod
 statsmodels
 salib
 pandas
-numpy
-networkx
+numpy~=1.19.5
+networkx~=2.5
+tqdm~=4.56.0

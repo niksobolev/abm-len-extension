@@ -5,6 +5,7 @@ import math
 import random
 from utils import *
 import networkx as nx
+from tqdm import tqdm_notebook, tqdm
 
 
 class Householder(Agent):
@@ -419,7 +420,7 @@ def run_model(number_of_households, number_of_companies, number_of_steps, min_we
                                            start_marketing)
 
     abm_model = LenExtended(number_of_households, number_of_companies, household_parameters, company_parameters)
-    for _ in range(number_of_steps):
+    for _ in tqdm_notebook(range(number_of_steps), total=number_of_steps, leave=False):
         abm_model.step()
 
     return abm_model
