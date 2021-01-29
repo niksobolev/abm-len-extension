@@ -78,7 +78,7 @@ class Householder(Agent):
     def get_new_company_from_network(self):
         if random.random() < self.prob_search_prod:
             if self.influenced_companies:
-                most_influenced = sorted(self.influenced_companies.items(), key=lambda x: x[1], reverse=True)[0]
+                most_influenced = sorted(self.influenced_companies.items(), key=lambda x: x[1], reverse=True)[0][0]
                 random_known_pick = random.choice(self.companies)
                 self.companies.remove(random_known_pick)
                 self.companies.append(most_influenced)
@@ -128,7 +128,7 @@ class Householder(Agent):
             if self.use_network:
                 if infl_company in self.influenced_companies:
                     infl = self.influenced_companies[infl_company]
-                    return max(1 - math.sqrt(infl), 0.95)
+                    return max(1 - math.sqrt(infl)*0.01, 0.95)
                 else:
                     return 1
             else:
@@ -151,9 +151,9 @@ class Householder(Agent):
         self.most_preferred = sorted(self.preferred_companies.items(), key=lambda x: x[1], reverse=True)[0]
 
     def calculate_social_influence(self):
-        neighbors_ids = self.model.social_network.neighbors(self.unique_id)
+        neighbors_ids = list(self.model.social_network.neighbors(self.unique_id))
         neighbor_companies = dict()
-        num_neigh = len(list(neighbors_ids))
+        num_neigh = len(neighbors_ids)
         for n_id in neighbors_ids:
             neighbor_company_tuple = self.model.hh_schedule._agents[n_id].most_preferred
             if neighbor_company_tuple is not None:
