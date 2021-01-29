@@ -281,6 +281,7 @@ class Company(Agent):
                 fired_h.company = None
                 del self.households[0]
         self.demand = 0
+        self.sold_last_month = 0
 
     # Marginal cost is price that we spend on production of 1 unit of inventory.
     # We spend money for only wages. Thus, marginal cost is wage divided by number
@@ -302,7 +303,7 @@ class Company(Agent):
         elif self.inventory < self.start_marketing * self.demand * 0.5:
             self.marketing_investments *= 0.8
 
-        self.sold_last_month = 0
+
 
     def invest_in_marketing(self):
         self.marketing_boost *= 0.8
@@ -437,7 +438,7 @@ class CompanyParameters:
         self.start_marketing = demand_min * 2
 
 
-def run_model(number_of_households, number_of_companies, number_of_steps, min_wealth=20000, max_wealth=45000,
+def run_model(number_of_households, number_of_companies, number_of_steps, min_wealth=40000, max_wealth=65000,
               default_wage=0, default_consumption=0, wage_decreasing_coefficient=0.9, critical_price_ratio=0.99,
               consumption_power=0.9, unemployed_attempts=5, search_job_chance=0.1, prob_search_price=0.25,
               prob_search_prod=0.25, a_connections_number=7, company_min_wealth=6000, initial_price=330,
