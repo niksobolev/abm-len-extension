@@ -120,7 +120,7 @@ class Householder(Agent):
     def buy_goods(self):
         def get_marketing_boost(marketing_boost):
             if self.use_marketing:
-                return max((100 - 2 * math.sqrt(x.marketing_boost))/100, 0.6)
+                return max((100 - math.sqrt(marketing_boost))/100, 0.6)
             else:
                 return 1
 
@@ -298,10 +298,10 @@ class Company(Agent):
                 self.price = self.price * (1 - random.uniform(0, self.upsilon))
 
     def change_marketing_investments(self):
-        if self.inventory > self.start_marketing * self.demand and self.marketing_investments < 0.5:
-            self.marketing_investments *= 1.1
-        elif self.inventory < self.start_marketing * self.demand * 0.5:
-            self.marketing_investments *= 0.8
+        if self.inventory > self.start_marketing * self.sold_last_month and self.marketing_investments < 0.5:
+            self.marketing_investments += 0.03
+        elif self.inventory < self.start_marketing * self.sold_last_month * 0.5 and self.marketing_investments > 0.01:
+            self.marketing_investments -= 0.01
 
 
 
@@ -435,7 +435,7 @@ class CompanyParameters:
         self.lambda_coefficient = lambda_coefficient
         self.money_buffer_coefficient = money_buffer_coefficient
         self.marketing_investments = marketing_investments
-        self.start_marketing = demand_min * 2
+        self.start_marketing = demand_min * 1.1
 
 
 def run_model(number_of_households, number_of_companies, number_of_steps, min_wealth=40000, max_wealth=65000,
