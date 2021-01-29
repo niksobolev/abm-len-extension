@@ -33,6 +33,7 @@ class Householder(Agent):
         # chance to search a new firm with higher demand (phi_quant)
         self.prob_search_prod = household_parameters.prob_search_prod
         self.use_marketing = household_parameters.use_marketing
+        self.use_network = household_parameters.use_network
         # number of type A connections (n)
         self.a_connections_number = household_parameters.a_connections_number
         self.penalty_companies = dict()
@@ -114,7 +115,17 @@ class Householder(Agent):
                 return max(1 - math.sqrt(marketing_boost) / 100, 0.5)
             else:
                 return 1
-        for company in sorted(self.companies, key=lambda x: x.price * get_marketing_boost(x.marketing_boost)):
+
+        def get_social_influence(infl_company):
+            if self.use_network:
+                if infl_company in self.influenced_companies:
+                    infl = self.influenced_companies[infl_company]
+                    return 1 - math.sqrt(infl)
+            else:
+                return 1
+
+        for company in sorted(self.companies, key=lambda x: x.price * get_marketing_boost(x.marketing_boost)
+                              * get_social_influence(x)):
             total_price = int(self.consumption * company.price)
             company.demand += self.consumption
             if company.inventory < self.consumption:
@@ -132,13 +143,14 @@ class Householder(Agent):
     def calculate_social_influence(self):
         neighbors_ids = self.model.social_network.neighbors(self.unique_id)
         neighbor_companies = dict()
+        num_neigh = len(neighbors_ids)
         for n_id in neighbors_ids:
             neighbor_company_tuple = self.model.hh_schedule._agents[n_id].most_preferred
             if neighbor_company_tuple is not None:
                 if neighbor_company_tuple[0] in neighbor_companies:
-                    neighbor_companies[neighbor_company_tuple[0]] += neighbor_company_tuple[1]
+                    neighbor_companies[neighbor_company_tuple[0]] += neighbor_company_tuple[1] / num_neigh
                 elif neighbor_company_tuple[1] != 0:
-                    neighbor_companies[neighbor_company_tuple[0]] = neighbor_company_tuple[1]
+                    neighbor_companies[neighbor_company_tuple[0]] = neighbor_company_tuple[1] / num_neigh
         self.influenced_companies = neighbor_companies
 
     def update_penalties_and_preferred(self):
@@ -303,7 +315,7 @@ class LenExtended(Model):
         self.current_day = 0
         self.hh_schedule = RandomActivation(self)
         self.cmp_schedule = RandomActivation(self)
-        self.social_network = nx.gnp_random_graph(num_hh, 0.1)
+        self.social_network = nx.barabasi_albert_graph(num_hh, num_hh//100)
         for i in range(self.num_cmp):
             c = Company(i, self, company_parameters)
             self.cmp_schedule.add(c)
@@ -364,7 +376,7 @@ class LenExtended(Model):
 class HouseholdParameters:
     def __init__(self, min_wealth, max_wealth, default_wage, default_consumption, wage_decreasing_coefficient,
                  critical_price_ratio, consumption_power, unemployed_attempts, search_job_chance, prob_search_price,
-                 prob_search_prod, a_connections_number, use_marketing):
+                 prob_search_prod, a_connections_number, use_marketing, use_network):
         self.min_wealth = min_wealth
         self.max_wealth = max_wealth
         self.default_wage = default_wage
@@ -378,6 +390,7 @@ class HouseholdParameters:
         self.prob_search_prod = prob_search_prod
         self.a_connections_number = a_connections_number
         self.use_marketing = use_marketing
+        self.use_network = use_network
 
 
 class CompanyParameters:
@@ -415,11 +428,12 @@ def run_model(number_of_households, number_of_companies, number_of_steps, min_we
               company_max_wealth=1000000, company_min_wage=29000, company_max_wage=35000, inventory=10,
               min_random_price=0, max_random_price=20, demand=100, demand_min=0.25, demand_max=1, sigma=0.019,
               gamma=24, phi_min=1.025, phi_max=1.15, tau=0.75, upsilon=0.02, lambda_coefficient=3,
-              money_buffer_coefficient=0.1, marketing_investments=0.2, start_marketing=0.05, use_marketing=True):
+              money_buffer_coefficient=0.1, marketing_investments=0.2, start_marketing=0.05, use_marketing=True,
+              use_network=True):
     household_parameters = HouseholdParameters(min_wealth, max_wealth, default_wage, default_consumption,
                                                wage_decreasing_coefficient, critical_price_ratio, consumption_power,
                                                unemployed_attempts, search_job_chance, prob_search_price,
-                                               prob_search_prod, a_connections_number, use_marketing)
+                                               prob_search_prod, a_connections_number, use_marketing, use_network)
     company_parameters = CompanyParameters(company_min_wealth, initial_price, company_max_wealth, company_min_wage,
                                            company_max_wage, inventory, min_random_price, max_random_price, demand,
                                            demand_min, demand_max, sigma, gamma, phi_min, phi_max, tau, upsilon,
