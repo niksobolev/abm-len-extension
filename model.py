@@ -32,6 +32,7 @@ class Householder(Agent):
         self.prob_search_price = household_parameters.prob_search_price
         # chance to search a new firm with higher demand (phi_quant)
         self.prob_search_prod = household_parameters.prob_search_prod
+        self.use_marketing = household_parameters.use_marketing
         # number of type A connections (n)
         self.a_connections_number = household_parameters.a_connections_number
         self.penalty_companies = dict()
@@ -108,7 +109,12 @@ class Householder(Agent):
         self.consumption = int((self.wealth / (30 * average_price)) ** self.consumption_power)
 
     def buy_goods(self):
-        for company in sorted(self.companies, key=lambda x: x.price * max(1 - math.sqrt(x.marketing_boost) / 100, 0.5)):
+        def get_marketing_boost(marketing_boost):
+            if self.use_marketing:
+                return max(1 - math.sqrt(marketing_boost) / 100, 0.5)
+            else:
+                return 1
+        for company in sorted(self.companies, key=lambda x: x.price * get_marketing_boost(x.marketing_boost)):
             total_price = int(self.consumption * company.price)
             company.demand += self.consumption
             if company.inventory < self.consumption:
@@ -358,7 +364,7 @@ class LenExtended(Model):
 class HouseholdParameters:
     def __init__(self, min_wealth, max_wealth, default_wage, default_consumption, wage_decreasing_coefficient,
                  critical_price_ratio, consumption_power, unemployed_attempts, search_job_chance, prob_search_price,
-                 prob_search_prod, a_connections_number):
+                 prob_search_prod, a_connections_number, use_marketing):
         self.min_wealth = min_wealth
         self.max_wealth = max_wealth
         self.default_wage = default_wage
@@ -371,6 +377,7 @@ class HouseholdParameters:
         self.prob_search_price = prob_search_price
         self.prob_search_prod = prob_search_prod
         self.a_connections_number = a_connections_number
+        self.use_marketing = use_marketing
 
 
 class CompanyParameters:
@@ -408,11 +415,11 @@ def run_model(number_of_households, number_of_companies, number_of_steps, min_we
               company_max_wealth=1000000, company_min_wage=29000, company_max_wage=35000, inventory=10,
               min_random_price=0, max_random_price=20, demand=100, demand_min=0.25, demand_max=1, sigma=0.019,
               gamma=24, phi_min=1.025, phi_max=1.15, tau=0.75, upsilon=0.02, lambda_coefficient=3,
-              money_buffer_coefficient=0.1, marketing_investments=0.2, start_marketing=0.05):
+              money_buffer_coefficient=0.1, marketing_investments=0.2, start_marketing=0.05, use_marketing=True):
     household_parameters = HouseholdParameters(min_wealth, max_wealth, default_wage, default_consumption,
                                                wage_decreasing_coefficient, critical_price_ratio, consumption_power,
                                                unemployed_attempts, search_job_chance, prob_search_price,
-                                               prob_search_prod, a_connections_number)
+                                               prob_search_prod, a_connections_number, use_marketing)
     company_parameters = CompanyParameters(company_min_wealth, initial_price, company_max_wealth, company_min_wage,
                                            company_max_wage, inventory, min_random_price, max_random_price, demand,
                                            demand_min, demand_max, sigma, gamma, phi_min, phi_max, tau, upsilon,
