@@ -77,10 +77,11 @@ class Householder(Agent):
 
     def get_new_company_from_network(self):
         if random.random() < self.prob_search_prod:
-            most_influenced = sorted(self.influenced_companies.items(), key=lambda x: x[1], reverse=True)[0]
-            random_known_pick = random.choice(self.companies)
-            self.companies.remove(random_known_pick)
-            self.companies.append(most_influenced)
+            if self.influenced_companies:
+                most_influenced = sorted(self.influenced_companies.items(), key=lambda x: x[1], reverse=True)[0]
+                random_known_pick = random.choice(self.companies)
+                self.companies.remove(random_known_pick)
+                self.companies.append(most_influenced)
 
     def search_new_job(self):
         for i in range(self.unemployed_attempts):
@@ -163,13 +164,15 @@ class Householder(Agent):
         self.influenced_companies = neighbor_companies
 
     def update_penalties_and_preferred(self):
+        self.penalty_companies = {}
+        self.preferred_companies = {}
         for company in self.companies:
             self.penalty_companies[company] = 0
             self.preferred_companies[company] = 0
 
     def end_of_month(self):
-        self.search_cheaper_prices()
         self.search_productive_firms()
+        self.search_cheaper_prices()
         self.get_new_company_from_network()
         self.search_new_job()
         self.identify_consumption()
