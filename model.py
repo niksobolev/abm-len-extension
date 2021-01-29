@@ -321,14 +321,14 @@ class Company(Agent):
 
 
 class LenExtended(Model):
-    def __init__(self, num_hh, num_cmp, household_parameters, company_parameters):
+    def __init__(self, num_hh, num_cmp, household_parameters, company_parameters, network_density):
 
         self.num_hh = num_hh
         self.num_cmp = num_cmp
         self.current_day = 0
         self.hh_schedule = RandomActivation(self)
         self.cmp_schedule = RandomActivation(self)
-        self.social_network = nx.barabasi_albert_graph(num_hh, num_hh//100)
+        self.social_network = nx.barabasi_albert_graph(num_hh, num_hh//network_density)
         for i in range(self.num_cmp):
             c = Company(i, self, company_parameters)
             self.cmp_schedule.add(c)
@@ -442,7 +442,7 @@ def run_model(number_of_households, number_of_companies, number_of_steps, min_we
               min_random_price=0, max_random_price=20, demand=100, demand_min=0.25, demand_max=1, sigma=0.019,
               gamma=24, phi_min=1.025, phi_max=1.15, tau=0.75, upsilon=0.02, lambda_coefficient=3,
               money_buffer_coefficient=0.1, marketing_investments=0.2, start_marketing=0.05, use_marketing=True,
-              use_network=True):
+              use_network=True, network_density=100):
     household_parameters = HouseholdParameters(min_wealth, max_wealth, default_wage, default_consumption,
                                                wage_decreasing_coefficient, critical_price_ratio, consumption_power,
                                                unemployed_attempts, search_job_chance, prob_search_price,
@@ -453,7 +453,8 @@ def run_model(number_of_households, number_of_companies, number_of_steps, min_we
                                            lambda_coefficient, money_buffer_coefficient, marketing_investments,
                                            start_marketing)
 
-    abm_model = LenExtended(number_of_households, number_of_companies, household_parameters, company_parameters)
+    abm_model = LenExtended(number_of_households, number_of_companies, household_parameters, company_parameters,
+                            network_density)
     for _ in tqdm_notebook(range(number_of_steps), total=number_of_steps, leave=False):
         abm_model.step()
 
