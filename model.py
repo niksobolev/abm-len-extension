@@ -125,7 +125,6 @@ class Householder(Agent):
                 if marketing_boost not in marketing:
                     marketing[marketing_boost] = max((100 - math.sqrt(marketing_boost))/100, 0.6)
                 return marketing[marketing_boost]
-                #return max((100 - math.sqrt(marketing_boost))/100, 0.6)
             else:
                 return 1
 
@@ -226,9 +225,13 @@ class Company(Agent):
         self.marketing_boost = 0  # price multiplicator gathered from marketing investments
         self.start_marketing = company_parameters.start_marketing
         self.sold_last_month = 10
+        self.use_marketing = company_parameters.use_marketing
 
     def produce(self):
-        self.inventory += len(self.households) * self.lambda_coefficient * (1 - self.marketing_investments)
+        if self.use_marketing:
+            self.inventory += len(self.households) * self.lambda_coefficient * (1 - self.marketing_investments)
+        else:
+            self.inventory += len(self.households) * self.lambda_coefficient
 
     def marketing_raise(self):
         self.marketing_boost = self.marketing_boost + len(
@@ -418,7 +421,7 @@ class HouseholdParameters:
 class CompanyParameters:
     def __init__(self, company_min_wealth, initial_price, company_max_wealth, company_min_wage, company_max_wage,
                  inventory, min_random_price, max_random_price, demand, demand_min, demand_max, sigma, gamma, phi_min,
-                 phi_max, tau, upsilon, lambda_coefficient, money_buffer_coefficient, marketing_investments):
+                 phi_max, tau, upsilon, lambda_coefficient, money_buffer_coefficient, marketing_investments, use_marketing):
         self.company_min_wealth = company_min_wealth
         self.initial_price = initial_price
         self.company_max_wealth = company_max_wealth
@@ -440,6 +443,7 @@ class CompanyParameters:
         self.money_buffer_coefficient = money_buffer_coefficient
         self.marketing_investments = marketing_investments
         self.start_marketing = demand_min * 1.1
+        self.use_marketing = use_marketing
 
 
 def run_model(number_of_households, number_of_companies, number_of_steps, min_wealth=40000, max_wealth=65000,
@@ -449,7 +453,7 @@ def run_model(number_of_households, number_of_companies, number_of_steps, min_we
               company_max_wealth=10000, company_min_wage=29000, company_max_wage=35000, inventory=10,
               min_random_price=0, max_random_price=20, demand=100, demand_min=0.25, demand_max=1, sigma=0.019,
               gamma=24, phi_min=1.025, phi_max=1.15, tau=0.75, upsilon=0.02, lambda_coefficient=3,
-              money_buffer_coefficient=0.1, marketing_investments=0.2, use_marketing=True,use_network=True,
+              money_buffer_coefficient=0.1, marketing_investments=0.2, use_marketing=True, use_network=True,
               network_density=100):
 
     household_parameters = HouseholdParameters(min_wealth, max_wealth, default_wage, default_consumption,
@@ -459,7 +463,7 @@ def run_model(number_of_households, number_of_companies, number_of_steps, min_we
     company_parameters = CompanyParameters(company_min_wealth, initial_price, company_max_wealth, company_min_wage,
                                            company_max_wage, inventory, min_random_price, max_random_price, demand,
                                            demand_min, demand_max, sigma, gamma, phi_min, phi_max, tau, upsilon,
-                                           lambda_coefficient, money_buffer_coefficient, marketing_investments)
+                                           lambda_coefficient, money_buffer_coefficient, marketing_investments, use_marketing)
 
     abm_model = LenExtended(number_of_households, number_of_companies, household_parameters, company_parameters,
                             network_density)
@@ -467,5 +471,6 @@ def run_model(number_of_households, number_of_companies, number_of_steps, min_we
         abm_model.step()
 
     return abm_model
+
 
 
