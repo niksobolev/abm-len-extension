@@ -7,7 +7,9 @@ from utils import *
 import networkx as nx
 from tqdm import tqdm_notebook, tqdm
 
-marketing={}
+marketing = {}
+
+
 class Householder(Agent):
     def __init__(self, unique_id, model, household_parameters):
         super().__init__(unique_id, model)
@@ -130,8 +132,8 @@ class Householder(Agent):
 
         def get_social_influence(infl_company):
             if self.use_network:
-                if infl_company in self.influenced_companies:
-                    infl = self.influenced_companies[infl_company]
+                infl = self.influenced_companies.get(infl_company)
+                if infl:
                     return max(1 - math.sqrt(infl)*0.01, 0.95)
                 else:
                     return 1
