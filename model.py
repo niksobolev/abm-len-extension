@@ -139,25 +139,19 @@ class Householder(Agent):
                     return 1
             else:
                 return 1
-        for company in sorted(self.companies, key=lambda x: x.price * get_marketing_boost(x.marketing_boost)
-                              * get_social_influence(x)):
-            if self.consumption == 0:
-                break
-            if company.inventory == 0:
-                self.penalty_companies[company] += 1
-                continue
 
-            total_inventory = min(self.consumption, min(math.ceil(self.wealth // company.price), company.inventory))
-            total_price = int(total_inventory * company.price)
-
+        for company in sorted(self.companies, key=lambda x: x.price * get_marketing_boost(x.marketing_boost) * get_social_influence(x)):
+            total_price = int(self.consumption * company.price)
             company.demand += self.consumption
-
-            self.wealth -= total_price
-            self.consumption -= total_inventory
-            company.wealth += total_price
-            company.sold_last_month += total_inventory
-            company.inventory -= total_inventory
-            self.preferred_companies[company] += 1
+            if company.inventory < self.consumption:
+                self.penalty_companies[company] += 1
+            if (company.inventory > self.consumption) and (total_price < self.wealth):
+                self.wealth -= total_price
+                company.wealth += total_price
+                company.sold_last_month += self.consumption
+                company.inventory -= self.consumption
+                self.preferred_companies[company] += 1
+                break
 
     def calculate_most_preferred(self):
         self.most_preferred = sorted(self.preferred_companies.items(), key=lambda x: x[1], reverse=True)[0]
