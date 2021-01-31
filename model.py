@@ -7,7 +7,7 @@ from utils import *
 import networkx as nx
 from tqdm import tqdm_notebook, tqdm
 
-
+marketing={}
 class Householder(Agent):
     def __init__(self, unique_id, model, household_parameters):
         super().__init__(unique_id, model)
@@ -120,7 +120,12 @@ class Householder(Agent):
     def buy_goods(self):
         def get_marketing_boost(marketing_boost):
             if self.use_marketing:
-                return max((100 - math.sqrt(marketing_boost))/100, 0.6)
+                if marketing_boost > 1600:
+                    return 0.6
+                if marketing_boost not in marketing:
+                    marketing[marketing_boost] = max((100 - math.sqrt(marketing_boost))/100, 0.6)
+                return marketing[marketing_boost]
+                #return max((100 - math.sqrt(marketing_boost))/100, 0.6)
             else:
                 return 1
 
@@ -133,7 +138,6 @@ class Householder(Agent):
                     return 1
             else:
                 return 1
-
         for company in sorted(self.companies, key=lambda x: x.price * get_marketing_boost(x.marketing_boost)
                               * get_social_influence(x)):
             total_price = int(self.consumption * company.price)
@@ -463,3 +467,5 @@ def run_model(number_of_households, number_of_companies, number_of_steps, min_we
         abm_model.step()
 
     return abm_model
+
+
