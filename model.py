@@ -117,7 +117,7 @@ class Householder(Agent):
 
     def identify_consumption(self):
         average_price = sum(company.price for company in self.companies) / len(self.companies)
-        self.consumption = int((self.wealth / (30 * average_price)) ** self.consumption_power)
+        self.consumption = int((self.wealth / (10 * average_price)) ** self.consumption_power)
 
     def buy_goods(self):
         def get_marketing_boost(marketing_boost):
@@ -189,7 +189,7 @@ class Householder(Agent):
         self.update_penalties_preferred_social()
 
     def step(self):
-        if self.model.current_day % 30 == 0:
+        if self.model.current_day % 10 == 0:
             self.end_of_month()
         self.buy_goods()
 
@@ -300,7 +300,7 @@ class Company(Agent):
     # than 2.5 percent) then we need to increase price. If we earn more than 15%
     # of marginal cost we should decrease price.
     def change_goods_price(self):
-        marginal_costs = self.wage / (30 * self.lambda_coefficient)
+        marginal_costs = self.wage / (10 * self.lambda_coefficient)
         if self.price < self.phi_min * marginal_costs:
             if random.random() < self.tau:
                 self.price = self.price * (1 + random.uniform(0, self.upsilon))
@@ -330,7 +330,7 @@ class Company(Agent):
     def step(self):
         self.marketing_raise()
         self.produce()
-        if self.model.current_day % 30 == 0:
+        if self.model.current_day % 10 == 0:
             self.end_of_month()
 
 
@@ -394,7 +394,7 @@ class LenExtended(Model):
     def step(self):
         self.cmp_schedule.step()
         self.hh_schedule.step()
-        if self.current_day % 30 == 0:
+        if self.current_day % 10 == 0:
             self.datacollector.collect(self)
 
         self.current_day += 1
