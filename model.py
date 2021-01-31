@@ -405,7 +405,7 @@ class HouseholdParameters:
                  critical_price_ratio, consumption_power, unemployed_attempts, search_job_chance, prob_search_price,
                  prob_search_prod, a_connections_number, use_marketing, use_network):
         self.min_wealth = min_wealth
-        self.max_wealth = max_wealth
+        self.max_wealth = min_wealth * 2
         self.default_wage = default_wage
         self.default_consumption = default_consumption
         self.wage_decreasing_coefficient = wage_decreasing_coefficient
