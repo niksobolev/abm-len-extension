@@ -17,7 +17,7 @@ class Householder(Agent):
         self.wealth = random.randint(household_parameters.min_wealth, household_parameters.max_wealth)
         self.wage = household_parameters.default_wage  # reservation wage (expected wage)
         self.consumption = household_parameters.default_consumption  # how much goods does householder consume per day
-        self.companies = []  # list of firms where householder can buy goods (type A connection)
+        self.companies = (random.sample(model.cmp_schedule.agents, 3))  # list of firms where householder can buy goods (type A connection)
         # firm that householder works for
         self.company = random.choice(self.model.cmp_schedule.agents)
         self.company.households.append(self)
@@ -45,8 +45,6 @@ class Householder(Agent):
         self.social_influence = dict()
         self.most_preferred = None
         self.influenced_companies = dict()
-        for _ in range(self.a_connections_number):
-            self.companies.append(random.choice(model.cmp_schedule.agents))
         for company in self.companies:
             self.penalty_companies[company] = 0
             self.preferred_companies[company] = 0
