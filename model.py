@@ -429,7 +429,8 @@ class HouseholdParameters:
 class CompanyParameters:
     def __init__(self, company_min_wealth, initial_price, company_max_wealth, company_min_wage, company_max_wage,
                  inventory, min_random_price, max_random_price, demand, demand_min, demand_max, sigma, gamma, phi_min,
-                 phi_max, tau, upsilon, lambda_coefficient, money_buffer_coefficient, marketing_investments, use_marketing):
+                 phi_max, tau, upsilon, lambda_coefficient, money_buffer_coefficient, marketing_investments,
+                 use_marketing):
         self.company_min_wealth = company_min_wealth
         self.initial_price = initial_price
         self.company_max_wealth = company_max_wealth
@@ -467,16 +468,17 @@ def run_model(number_of_households, number_of_companies, number_of_steps, min_we
     household_parameters = HouseholdParameters(min_wealth, max_wealth, default_wage, default_consumption,
                                                wage_decreasing_coefficient, critical_price_ratio, consumption_power,
                                                unemployed_attempts, search_job_chance, prob_search_price,
-                                               prob_search_prod, a_connections_number, use_marketing, use_network)
+                                               prob_search_prod, max(3, min(7, number_of_companies // 3)),
+                                               use_marketing, use_network)
     company_parameters = CompanyParameters(company_min_wealth, initial_price, company_max_wealth, company_min_wage,
                                            company_max_wage, inventory, min_random_price, max_random_price, demand,
                                            demand_min, demand_max, sigma, gamma, phi_min, phi_max, tau, upsilon,
-                                           lambda_coefficient, money_buffer_coefficient, marketing_investments, use_marketing)
+                                           lambda_coefficient, money_buffer_coefficient, marketing_investments,
+                                           use_marketing)
 
     abm_model = LenExtended(number_of_households, number_of_companies, household_parameters, company_parameters,
                             network_density)
     for _ in tqdm_notebook(range(number_of_steps), total=number_of_steps, leave=False):
-    #for _ in range(number_of_steps):
         abm_model.step()
 
     return abm_model
