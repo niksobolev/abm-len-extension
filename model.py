@@ -194,7 +194,7 @@ class Householder(Agent):
         self.identify_consumption()
         self.calculate_most_preferred()
         self.calculate_social_influence()
-        self.update_penalties_and_preferred()
+        self.update_penalties_preferred_social()
 
     def step(self):
         if self.model.current_day % 30 == 0:
