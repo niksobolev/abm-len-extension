@@ -414,7 +414,7 @@ class HouseholdParameters:
         self.unemployed_attempts = unemployed_attempts
         self.search_job_chance = search_job_chance
         self.prob_search_price = prob_search_price
-        self.prob_search_prod = prob_search_prod
+        self.prob_search_prod = prob_search_price
         self.a_connections_number = a_connections_number
         self.use_marketing = use_marketing
         self.use_network = use_network
