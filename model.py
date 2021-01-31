@@ -18,7 +18,9 @@ class Householder(Agent):
         self.wage = household_parameters.default_wage  # reservation wage (expected wage)
         self.consumption = household_parameters.default_consumption  # how much goods does householder consume per day
         self.companies = []  # list of firms where householder can buy goods (type A connection)
-        self.company = None  # firm that householder works for
+        # firm that householder works for
+        self.company = random.choice(self.model.cmp_schedule.agents)
+        self.company.households.append(self)
         # if household was unemployed his reservation wage decreases by 10%
         self.wage_decreasing_coefficient = household_parameters.wage_decreasing_coefficient
         # if price in new company less that this value, replace company by new one
@@ -318,8 +320,6 @@ class Company(Agent):
         elif self.inventory < self.start_marketing * self.sold_last_month * 0.5 and self.marketing_investments > 0.01:
             self.marketing_investments -= 0.01
 
-
-
     def invest_in_marketing(self):
         self.marketing_boost *= 0.8
 
@@ -450,7 +450,7 @@ class CompanyParameters:
         self.lambda_coefficient = lambda_coefficient
         self.money_buffer_coefficient = money_buffer_coefficient
         self.marketing_investments = marketing_investments
-        self.start_marketing = demand_min * 1.1
+        self.start_marketing = demand_min * 1.5
         self.use_marketing = use_marketing
 
 
