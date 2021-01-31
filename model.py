@@ -177,12 +177,14 @@ class Householder(Agent):
                     neighbor_companies[neighbor_company_tuple[0]] = neighbor_company_tuple[1] / num_neigh
         self.influenced_companies = neighbor_companies
 
-    def update_penalties_and_preferred(self):
+    def update_penalties_preferred_social(self):
         self.penalty_companies = {}
         self.preferred_companies = {}
+        self.social_influence = {}
         for company in self.companies:
             self.penalty_companies[company] = 0
             self.preferred_companies[company] = 0
+            self.social_influence[company] = 1
 
     def end_of_month(self):
         self.search_productive_firms()
