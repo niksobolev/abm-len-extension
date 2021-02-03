@@ -35,3 +35,6 @@ Organization, vol. 86, pp. 102–120, 2013.
 “Complex agent-basedmacroeconomics:  a  manifesto
 for  a  new  paradigm,”Journal  ofEconomic Interaction
 and Coordination, vol. 5, no. 2, pp. 111–135, 2010.
+
+## License
+[MIT](https://choosealicense.com/licenses/mit/)
