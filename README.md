@@ -19,7 +19,8 @@ number_of_householders = 150
 number_of_companies = 10
 number_of_days = 20000
 
-abm_model = model.run_model(number_of_householders, number_of_companies, number_of_days)
+abm_model = model.run_model(number_of_householders, number_of_companies, number_of_days) # Saving model object
+data = abm_model.datacollector.get_model_vars_dataframe() # Extracting data collected by model
 ```
 
 ## Contributing
